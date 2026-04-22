@@ -1,56 +1,24 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Bot, User, Minus } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, User, Minus, Phone, CreditCard } from 'lucide-react';
+import { sendChatMessage } from '@/lib/api';
+import type { ChatResponse } from '@/lib/types';
 
 interface ChatMessage {
   id: string;
   sender: 'user' | 'ai';
   text: string;
   timestamp: string;
+  meta?: ChatResponse;
 }
 
 const GREETING: ChatMessage = {
   id: 'greeting',
   sender: 'ai',
-  text: "Hello! 👋 Welcome to KeceoOil. I can help you browse our red palm oil products, place an order, or answer any questions.\n\nWhat can I help you with?",
+  text: "Hello! 👋 Welcome to KeceoOil. I can help you browse our red palm oil products, place an order, or answer any questions.\n\nPlease enter your phone number to get started.",
   timestamp: new Date().toISOString(),
 };
-
-// Simulated AI responses based on keywords
-function getAIResponse(input: string): string {
-  const lower = input.toLowerCase();
-
-  if (lower.includes('price') || lower.includes('how much') || lower.includes('cost')) {
-    return "Here are our current prices:\n\n🛢️ 3L Cold-Pressed — ₦9,500\n🛢️ 5L Premium — ₦12,500\n🛢️ 5L Organic — ₦14,500\n🛢️ 10L Refined — ₦22,000\n🛢️ 20L Drum — ₦42,000\n🛢️ 25L Food Grade — ₦58,000\n🛢️ 50L Bulk — ₦95,000\n🛢️ 100L Tanker — ₦185,000\n\nWhich size are you interested in?";
-  }
-
-  if (lower.includes('order') || lower.includes('buy') || lower.includes('want')) {
-    return "Great! To place an order, I'll need:\n\n1. Which product and size?\n2. How many units?\n3. Your delivery city and area\n\nYou can also order directly via WhatsApp for fastest processing! 💬";
-  }
-
-  if (lower.includes('delivery') || lower.includes('shipping') || lower.includes('deliver')) {
-    return "We deliver across Nigeria! 🚚\n\n• Lagos — Same day / Next day\n• Abuja — 1-2 business days\n• Other cities — 2-4 business days\n\nDelivery is arranged after payment confirmation.";
-  }
-
-  if (lower.includes('bulk') || lower.includes('wholesale') || lower.includes('large')) {
-    return "For bulk orders (50L+), we offer special pricing! 💰\n\n🛢️ 50L Bulk — ₦95,000\n🛢️ 100L Tanker — ₦185,000\n\nContact us for custom quotes on larger volumes. We supply restaurants, manufacturers, and retailers.";
-  }
-
-  if (lower.includes('payment') || lower.includes('pay') || lower.includes('transfer')) {
-    return "We accept:\n\n• Bank transfer\n• Online payment via our secure link\n\nAfter you place an order, we'll send you a payment link. Your order will be processed immediately after confirmation. ✅";
-  }
-
-  if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey') || lower.includes('good')) {
-    return "Hello! 😊 How can I help you today? I can assist with:\n\n• Product information & prices\n• Placing an order\n• Delivery details\n• Bulk/wholesale inquiries";
-  }
-
-  if (lower.includes('thank') || lower.includes('thanks')) {
-    return "You're welcome! 😊 Is there anything else I can help you with?";
-  }
-
-  return "I'd be happy to help! You can ask me about:\n\n• 🛢️ Product sizes and prices\n• 📦 Placing an order\n• 🚚 Delivery information\n• 💰 Bulk/wholesale pricing\n• 💳 Payment methods\n\nYou can also reach our WhatsApp — it's handled by real people (not bots), available 24/7!";
-}
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -58,6 +26,8 @@ export function ChatWidget() {
   const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [phoneInput, setPhoneInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -73,9 +43,33 @@ export function ChatWidget() {
     }
   }, [isOpen, isMinimized]);
 
-  const handleSend = () => {
+  const stripPaystackUrl = (text: string) =>
+    text
+      .split('\n')
+      .filter((line) => !line.includes('checkout.paystack.com') && !line.includes('Pay here:'))
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+  const handlePhoneSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleaned = phoneInput.trim().replace(/\s+/g, '');
+    if (cleaned.length < 10) return;
+    setPhone(cleaned);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `ai-phone`,
+        sender: 'ai',
+        text: `Great! Connected as ${cleaned}.\n\nHow can I help you today? You can ask about:\n• 🛢️ Product sizes and prices\n• 📦 Placing an order\n• 🚚 Delivery information\n• 💰 Bulk/wholesale pricing`,
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+  };
+
+  const handleSend = async () => {
     const text = input.trim();
-    if (!text || isTyping) return;
+    if (!text || isTyping || !phone) return;
 
     const userMsg: ChatMessage = {
       id: `u-${Date.now()}`,
@@ -87,17 +81,91 @@ export function ChatWidget() {
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI delay
-    setTimeout(() => {
+    try {
+      const data = await sendChatMessage(phone, text);
+      const reply = data.ai_response.reply;
+
+      // Strip Paystack URL lines — the Pay Now button handles it
+      let fullReply = stripPaystackUrl(reply);
+      if (data.ai_response.order_id) {
+        fullReply += `\n\n📋 Order #${data.ai_response.order_id} created!`;
+      }
+      if (data.ai_response.delivery_info?.city) {
+        const d = data.ai_response.delivery_info;
+        fullReply += `\n\n📍 Delivery: ${d.address}, ${d.area}, ${d.city}`;
+      }
+      if (data.ai_response.products && data.ai_response.products.length > 0) {
+        const items = data.ai_response.products
+          .map((p) => `${p.quantity}× ${p.name}`)
+          .join(', ');
+        if (!fullReply.includes(items)) {
+          fullReply += `\n\n🛒 ${items}`;
+        }
+      }
+
       const aiMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
         sender: 'ai',
-        text: getAIResponse(text),
+        text: fullReply,
         timestamp: new Date().toISOString(),
+        meta: data,
       };
       setMessages((prev) => [...prev, aiMsg]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `ai-err-${Date.now()}`,
+          sender: 'ai',
+          text: "Sorry, I'm having trouble connecting. Please try again or reach us on WhatsApp.",
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+    } finally {
       setIsTyping(false);
-    }, 800 + Math.random() * 700);
+    }
+  };
+
+  const handleQuickAction = (label: string) => {
+    setInput(label);
+    // Trigger send on next tick after state updates
+    setTimeout(() => {
+      const userMsg: ChatMessage = {
+        id: `u-${Date.now()}`,
+        sender: 'user',
+        text: label,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, userMsg]);
+      setInput('');
+      setIsTyping(true);
+
+      sendChatMessage(phone, label)
+        .then((data) => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `ai-${Date.now()}`,
+              sender: 'ai',
+              text: stripPaystackUrl(data.ai_response.reply),
+              timestamp: new Date().toISOString(),
+              meta: data,
+            },
+          ]);
+        })
+        .catch(() => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `ai-err-${Date.now()}`,
+              sender: 'ai',
+              text: "Sorry, I'm having trouble connecting. Please try again.",
+              timestamp: new Date().toISOString(),
+            },
+          ]);
+        })
+        .finally(() => setIsTyping(false));
+    }, 50);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -145,7 +213,8 @@ export function ChatWidget() {
 
   // Full chat window
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-[360px] max-w-[calc(100vw-2rem)] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+    <div
+      className="fixed bottom-6 right-6 z-50 w-[360px] max-w-[calc(100vw-2rem)] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
       style={{ height: 'min(520px, calc(100vh - 6rem))' }}
     >
       {/* Header */}
@@ -157,7 +226,7 @@ export function ChatWidget() {
           <div>
             <h3 className="font-semibold text-sm">KeceoOil</h3>
             <p className="text-xs opacity-80">
-              {isTyping ? 'Typing...' : 'Online — We reply instantly'}
+              {isTyping ? 'Typing...' : phone ? 'Online — AI Assistant' : 'Online — Enter your phone'}
             </p>
           </div>
         </div>
@@ -185,11 +254,14 @@ export function ChatWidget() {
           const isUser = msg.sender === 'user';
           return (
             <div key={msg.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[85%]`}>
+              <div className="max-w-[85%]">
                 <div className={`flex items-center gap-1.5 mb-1 ${isUser ? 'justify-end' : ''}`}>
                   {!isUser && <Bot className="w-3 h-3 text-muted-foreground" />}
                   <span className="text-[10px] text-muted-foreground">
-                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(msg.timestamp).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </span>
                   {isUser && <User className="w-3 h-3 text-muted-foreground" />}
                 </div>
@@ -201,6 +273,17 @@ export function ChatWidget() {
                   }`}
                 >
                   <p className="whitespace-pre-wrap">{msg.text}</p>
+                  {msg.meta?.payment?.authorization_url && (
+                    <a
+                      href={msg.meta.payment.authorization_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors text-sm no-underline"
+                    >
+                      <CreditCard className="w-4 h-4" />
+                      Pay Now — {msg.meta.payment.amount ? `₦${(msg.meta.payment.amount / 100).toLocaleString()}` : 'Paystack'}
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
@@ -212,74 +295,94 @@ export function ChatWidget() {
           <div className="flex justify-start">
             <div className="bg-card border border-border rounded-2xl rounded-bl-md px-4 py-3">
               <div className="flex gap-1">
-                <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '300ms' }} />
+                <span
+                  className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce"
+                  style={{ animationDelay: '0ms' }}
+                />
+                <span
+                  className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce"
+                  style={{ animationDelay: '150ms' }}
+                />
+                <span
+                  className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce"
+                  style={{ animationDelay: '300ms' }}
+                />
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Quick Actions */}
-      {messages.length <= 1 && (
-        <div className="px-4 py-2 border-t border-border flex gap-2 overflow-x-auto">
-          {['View Prices', 'Place Order', 'Delivery Info', 'Bulk Pricing'].map((label) => (
+      {/* Phone collection or Quick actions */}
+      {!phone ? (
+        <form
+          onSubmit={handlePhoneSubmit}
+          className="px-3 py-3 border-t border-border bg-card"
+        >
+          <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+            <Phone className="w-3 h-3" />
+            Enter your phone number to start chatting
+          </p>
+          <div className="flex items-center gap-2">
+            <input
+              type="tel"
+              value={phoneInput}
+              onChange={(e) => setPhoneInput(e.target.value)}
+              placeholder="e.g. 09150464707"
+              className="flex-1 px-3.5 py-2.5 text-sm border border-border rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+            />
             <button
-              key={label}
-              onClick={() => {
-                setInput(label);
-                setTimeout(() => {
-                  const userMsg: ChatMessage = {
-                    id: `u-${Date.now()}`,
-                    sender: 'user',
-                    text: label,
-                    timestamp: new Date().toISOString(),
-                  };
-                  setMessages((prev) => [...prev, userMsg]);
-                  setInput('');
-                  setIsTyping(true);
-                  setTimeout(() => {
-                    const aiMsg: ChatMessage = {
-                      id: `ai-${Date.now()}`,
-                      sender: 'ai',
-                      text: getAIResponse(label),
-                      timestamp: new Date().toISOString(),
-                    };
-                    setMessages((prev) => [...prev, aiMsg]);
-                    setIsTyping(false);
-                  }, 800);
-                }, 100);
-              }}
-              className="flex-shrink-0 px-3 py-1.5 text-xs font-medium bg-secondary text-foreground rounded-full hover:bg-secondary/80 transition-colors"
+              type="submit"
+              disabled={phoneInput.trim().replace(/\s+/g, '').length < 10}
+              className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
             >
-              {label}
+              <Send className="w-4 h-4" />
             </button>
-          ))}
-        </div>
-      )}
+          </div>
+        </form>
+      ) : (
+        <>
+          {/* Quick Actions — show only right after phone confirmation */}
+          {messages.length <= 2 && (
+            <div className="px-4 py-2 border-t border-border flex gap-2 overflow-x-auto">
+              {['View Prices', 'Place Order', 'Delivery Info', 'Bulk Pricing'].map(
+                (label) => (
+                  <button
+                    key={label}
+                    onClick={() => handleQuickAction(label)}
+                    disabled={isTyping}
+                    className="flex-shrink-0 px-3 py-1.5 text-xs font-medium bg-secondary text-foreground rounded-full hover:bg-secondary/80 transition-colors disabled:opacity-50"
+                  >
+                    {label}
+                  </button>
+                )
+              )}
+            </div>
+          )}
 
-      {/* Input */}
-      <div className="px-3 py-3 border-t border-border bg-card">
-        <div className="flex items-end gap-2">
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
-            rows={1}
-            className="flex-1 px-3.5 py-2.5 text-sm border border-border rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || isTyping}
-            className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-          >
-            <Send className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+          {/* Input */}
+          <div className="px-3 py-3 border-t border-border bg-card">
+            <div className="flex items-end gap-2">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type a message..."
+                rows={1}
+                className="flex-1 px-3.5 py-2.5 text-sm border border-border rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+              />
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || isTyping}
+                className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

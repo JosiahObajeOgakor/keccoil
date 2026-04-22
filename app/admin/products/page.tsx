@@ -5,23 +5,24 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { isAdminAuthenticated } from '@/lib/utils/auth';
 import { useAdmin } from '@/lib/contexts/AdminContext';
-import type { Product } from '@/lib/mockData';
+import type { Product } from '@/lib/types';
+import { formatPrice } from '@/lib/constants';
 import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
 
 interface FormState {
   isOpen: boolean;
   mode: 'add' | 'edit';
   data: Partial<Product>;
-  editingId?: string;
+  editingId?: number;
 }
 
 export default function ProductsPage() {
   const router = useRouter();
-  const { products, addProduct, updateProduct, deleteProduct } = useAdmin();
+  const { products, isLoading: productsLoading, addProduct, updateProduct, deleteProduct } = useAdmin();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
   const [form, setForm] = useState<FormState>({ isOpen: false, mode: 'add', data: {} });
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isAdminAuthenticated()) {
@@ -30,13 +31,9 @@ export default function ProductsPage() {
   }, [router]);
 
   const filteredProducts = products
-    .filter(
-      (p) =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.category.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    .filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => {
-      if (sortBy === 'newest') return new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime();
+      if (sortBy === 'newest') return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
       if (sortBy === 'price-high') return b.price - a.price;
       if (sortBy === 'price-low') return a.price - b.price;
       return 0;
@@ -46,7 +43,7 @@ export default function ProductsPage() {
     setForm({
       isOpen: true,
       mode: 'add',
-      data: { name: '', price: 0, image: '', description: '', category: 'Red Palm Oil', stock: 0, available: true },
+      data: { name: '', price: 0, image_url: '', description: '', available: true },
     });
   };
 
@@ -54,18 +51,18 @@ export default function ProductsPage() {
     setForm({ isOpen: true, mode: 'edit', data: { ...product }, editingId: product.id });
   };
 
-  const handleSave = () => {
-    if (!form.data.name || !form.data.price || !form.data.category) return;
+  const handleSave = async () => {
+    if (!form.data.name || !form.data.price) return;
     if (form.mode === 'add') {
-      addProduct(form.data as Omit<Product, 'id'>);
+      await addProduct(form.data as Omit<Product, 'id' | 'created_at' | 'updated_at'>);
     } else if (form.editingId) {
-      updateProduct(form.editingId, form.data);
+      await updateProduct(form.editingId, form.data);
     }
     setForm({ isOpen: false, mode: 'add', data: {} });
   };
 
-  const handleDelete = (id: string) => {
-    deleteProduct(id);
+  const handleDelete = async (id: number) => {
+    await deleteProduct(id);
     setDeleteConfirm(null);
   };
 
@@ -116,9 +113,8 @@ export default function ProductsPage() {
               <thead className="border-b border-border bg-secondary/30">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Product</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Category</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Price</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Stock</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Updated</th>
                   <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
                 </tr>
@@ -128,31 +124,30 @@ export default function ProductsPage() {
                   <tr key={product.id} className="hover:bg-secondary/20 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-secondary">
-                          <Image src={product.image} alt={product.name} width={40} height={40} className="w-full h-full object-cover" />
-                        </div>
+                        {product.image_url && (
+                          <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-secondary">
+                            <Image src={product.image_url} alt={product.name} width={40} height={40} className="w-full h-full object-cover" />
+                          </div>
+                        )}
                         <div>
                           <p className="font-medium text-sm text-foreground">{product.name}</p>
-                          <p className="text-xs text-muted-foreground">{product.id}</p>
+                          <p className="text-xs text-muted-foreground">#{product.id}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-foreground">{product.category}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-foreground">₦{product.price.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-foreground">{formatPrice(product.price)}</td>
                     <td className="px-6 py-4">
                       <span
                         className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                          product.stock > 10
+                          product.available
                             ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : product.stock > 0
-                            ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
                             : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                         }`}
                       >
-                        {product.stock} units
+                        {product.available ? 'Available' : 'Unavailable'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">{product.lastUpdated}</td>
+                    <td className="px-6 py-4 text-sm text-muted-foreground">{new Date(product.updated_at).toLocaleDateString()}</td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
@@ -201,35 +196,14 @@ export default function ProductsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Category *</label>
-                <select
-                  value={form.data.category || ''}
-                  onChange={(e) => setForm((p) => ({ ...p, data: { ...p.data, category: e.target.value } }))}
+                <label className="block text-sm font-medium text-foreground mb-1.5">Price (kobo) *</label>
+                <input
+                  type="number"
+                  value={form.data.price || ''}
+                  onChange={(e) => setForm((p) => ({ ...p, data: { ...p.data, price: parseInt(e.target.value) || 0 } }))}
                   className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                >
-                  <option value="">Select type</option>
-                  <option value="Red Palm Oil">Red Palm Oil</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1.5">Price (₦) *</label>
-                  <input
-                    type="number"
-                    value={form.data.price || ''}
-                    onChange={(e) => setForm((p) => ({ ...p, data: { ...p.data, price: parseInt(e.target.value) || 0 } }))}
-                    className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1.5">Stock</label>
-                  <input
-                    type="number"
-                    value={form.data.stock || ''}
-                    onChange={(e) => setForm((p) => ({ ...p, data: { ...p.data, stock: parseInt(e.target.value) || 0 } }))}
-                    className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  />
-                </div>
+                />
+                <p className="text-xs text-muted-foreground mt-1">Enter price in kobo (e.g. 500000 = ₦5,000)</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Description</label>
@@ -244,10 +218,20 @@ export default function ProductsPage() {
                 <label className="block text-sm font-medium text-foreground mb-1.5">Image URL</label>
                 <input
                   type="text"
-                  value={form.data.image || ''}
-                  onChange={(e) => setForm((p) => ({ ...p, data: { ...p.data, image: e.target.value } }))}
+                  value={form.data.image_url || ''}
+                  onChange={(e) => setForm((p) => ({ ...p, data: { ...p.data, image_url: e.target.value } }))}
                   className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="available"
+                  checked={form.data.available ?? true}
+                  onChange={(e) => setForm((p) => ({ ...p, data: { ...p.data, available: e.target.checked } }))}
+                  className="rounded border-border"
+                />
+                <label htmlFor="available" className="text-sm text-foreground">Available</label>
               </div>
             </div>
             <div className="flex gap-3">

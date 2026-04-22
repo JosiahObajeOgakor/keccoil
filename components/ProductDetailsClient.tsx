@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { ProductCard } from '@/components/ProductCard';
 import { Footer } from '@/components/Footer';
-import { PRODUCTS, type Product } from '@/lib/mockData';
+import type { Product } from '@/lib/types';
+import { formatPrice } from '@/lib/constants';
+import * as api from '@/lib/api';
 import { generateWhatsAppLink } from '@/lib/utils/whatsapp';
 import { OrderModal } from '@/components/OrderModal';
 
@@ -15,9 +17,43 @@ interface ProductDetailsClientProps {
 }
 
 export function ProductDetailsClient({ productId }: ProductDetailsClientProps) {
-  const product = PRODUCTS.find((p) => p.id === productId);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    Promise.all([
+      api.getProductById(Number(productId)),
+      api.getProducts(),
+    ]).then(([prod, all]) => {
+      setProduct(prod);
+      setAllProducts(all);
+      setIsLoading(false);
+    }).catch(() => setIsLoading(false));
+  }, [productId]);
+
+  if (isLoading) {
+    return (
+      <>
+        <Header />
+        <main className="flex-1">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              <div className="aspect-square bg-secondary/30 rounded-xl animate-pulse" />
+              <div className="space-y-4">
+                <div className="h-8 w-48 bg-secondary/30 rounded animate-pulse" />
+                <div className="h-4 w-full bg-secondary/30 rounded animate-pulse" />
+                <div className="h-4 w-3/4 bg-secondary/30 rounded animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   if (!product) {
     return (
@@ -42,14 +78,14 @@ export function ProductDetailsClient({ productId }: ProductDetailsClientProps) {
     );
   }
 
-  const relatedProducts = PRODUCTS.filter(
-    (p) => p.category === product.category && p.id !== product.id
+  const relatedProducts = allProducts.filter(
+    (p) => p.id !== product.id
   ).slice(0, 3);
 
   const whatsappLink = generateWhatsAppLink(
     '234 812 345 6789',
     product.name,
-    product.id,
+    String(product.id),
     quantity
   );
 
@@ -65,8 +101,6 @@ export function ProductDetailsClient({ productId }: ProductDetailsClientProps) {
                 Products
               </Link>
               <span className="text-muted-foreground">/</span>
-              <span className="text-muted-foreground">{product.category}</span>
-              <span className="text-muted-foreground">/</span>
               <span className="text-foreground font-medium">{product.name}</span>
             </div>
           </div>
@@ -78,22 +112,23 @@ export function ProductDetailsClient({ productId }: ProductDetailsClientProps) {
             {/* Product Image */}
             <div className="flex items-center justify-center">
               <div className="relative w-full aspect-square bg-secondary rounded-xl overflow-hidden">
-                <Image
-                  src={product.image}
-                  alt={product.name}
-                  fill
-                  className="object-cover"
-                  priority
-                />
+                {product.image_url ? (
+                  <Image
+                    src={product.image_url}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">No Image</div>
+                )}
               </div>
             </div>
 
             {/* Product Info */}
             <div className="flex flex-col justify-center">
               <div className="mb-6">
-                <div className="inline-block px-3 py-1 bg-accent/20 text-accent rounded-full text-sm font-medium mb-4">
-                  {product.category}
-                </div>
                 <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
                   {product.name}
                 </h1>
@@ -108,21 +143,19 @@ export function ProductDetailsClient({ productId }: ProductDetailsClientProps) {
               <div className="border-b border-border pb-8 mb-8">
                 <div className="flex items-baseline gap-4 mb-4">
                   <div className="text-4xl font-bold text-primary">
-                    ₦{product.price.toLocaleString()}
+                    {formatPrice(product.price)}
                   </div>
                   <div className="text-sm text-muted-foreground">per unit</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <div
                     className={`inline-block px-3 py-1 rounded-lg font-medium text-sm ${
-                      product.stock > 10
+                      product.available
                         ? 'bg-green-100 text-green-700'
-                        : product.stock > 0
-                        ? 'bg-yellow-100 text-yellow-700'
                         : 'bg-red-100 text-red-700'
                     }`}
                   >
-                    {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                    {product.available ? 'Available' : 'Out of stock'}
                   </div>
                 </div>
               </div>

@@ -1,48 +1,23 @@
-// Simple admin authentication utilities
-// For MVP only - in production, use proper session management
+// Admin authentication using API key
+// Key is stored in sessionStorage and sent as X-Admin-Key header
 
-const ADMIN_PASSWORD_HASH = 'admin123'; // Simple hash for demo purposes
+const STORAGE_KEY = 'adminApiKey';
 
-export interface AdminSession {
-  isAuthenticated: boolean;
-  adminName?: string;
-}
-
-export function validateAdminPassword(password: string): boolean {
-  // In production, use bcrypt or similar
-  return password === ADMIN_PASSWORD_HASH;
-}
-
-export function getStoredSession(): AdminSession | null {
+export function getAdminKey(): string | null {
   if (typeof window === 'undefined') return null;
-  
-  const session = sessionStorage.getItem('adminSession');
-  if (!session) return null;
-  
-  try {
-    return JSON.parse(session);
-  } catch {
-    return null;
-  }
+  return sessionStorage.getItem(STORAGE_KEY);
 }
 
-export function setAdminSession(adminName: string): void {
+export function setAdminKey(key: string): void {
   if (typeof window === 'undefined') return;
-  
-  const session: AdminSession = {
-    isAuthenticated: true,
-    adminName,
-  };
-  
-  sessionStorage.setItem('adminSession', JSON.stringify(session));
+  sessionStorage.setItem(STORAGE_KEY, key);
 }
 
 export function clearAdminSession(): void {
   if (typeof window === 'undefined') return;
-  sessionStorage.removeItem('adminSession');
+  sessionStorage.removeItem(STORAGE_KEY);
 }
 
 export function isAdminAuthenticated(): boolean {
-  const session = getStoredSession();
-  return session?.isAuthenticated ?? false;
+  return !!getAdminKey();
 }

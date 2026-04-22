@@ -77,11 +77,14 @@ export function Footer() {
         <div className="border-t border-border pt-8 flex flex-col sm:flex-row items-center justify-between text-sm text-muted-foreground">
           <p>&copy; 2024 KeceoOil. All rights reserved. Premium Red Palm Oil.</p>
           <div className="flex gap-6 mt-4 sm:mt-0">
-            <a href="#" className="hover:text-primary transition-colors">
+            <a href="/privacy" className="hover:text-primary transition-colors">
               Privacy
             </a>
-            <a href="#" className="hover:text-primary transition-colors">
+            <a href="/terms" className="hover:text-primary transition-colors">
               Terms
+            </a>
+            <a href="/datadeletion" className="hover:text-primary transition-colors">
+              Data Deletion
             </a>
           </div>
         </div>

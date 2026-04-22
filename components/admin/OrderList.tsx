@@ -1,24 +1,26 @@
 'use client';
 
-import type { Order } from '@/lib/mockData';
+import type { Order, OrderStatus } from '@/lib/types';
+import { formatPrice } from '@/lib/constants';
 import { StatusBadge } from './StatusBadge';
 import { Search } from 'lucide-react';
 import { useOrdersStore } from '@/lib/stores/ordersStore';
-import type { OrderStatus } from '@/lib/mockData';
 
 const STATUS_FILTERS: { value: OrderStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'All' },
-  { value: 'pending_payment', label: 'Pending' },
-  { value: 'paid', label: 'Paid' },
-  { value: 'processing', label: 'Processing' },
-  { value: 'delivered', label: 'Delivered' },
-  { value: 'flagged', label: 'Flagged' },
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'CONFIRMED', label: 'Confirmed' },
+  { value: 'PAID', label: 'Paid' },
+  { value: 'SHIPPED', label: 'Shipped' },
+  { value: 'DELIVERED', label: 'Delivered' },
+  { value: 'CANCELLED', label: 'Cancelled' },
+  { value: 'FLAGGED', label: 'Flagged' },
 ];
 
 interface OrderListProps {
   orders: Order[];
-  selectedOrderId: string | null;
-  onSelectOrder: (id: string) => void;
+  selectedOrderId: number | null;
+  onSelectOrder: (id: number) => void;
   isLoading: boolean;
 }
 
@@ -81,23 +83,18 @@ export function OrderList({ orders, selectedOrderId, onSelectOrder, isLoading }:
                 }`}
               >
                 <div className="flex items-start justify-between mb-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm text-foreground">{order.id}</span>
-                    {order.isNew && (
-                      <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                    )}
-                  </div>
+                  <span className="font-medium text-sm text-foreground">#{order.id}</span>
                   <StatusBadge type="order" status={order.status} />
                 </div>
-                <p className="text-sm text-foreground truncate">{order.customerName}</p>
+                <p className="text-sm text-foreground truncate">{order.user?.name || 'Unknown'}</p>
                 <div className="flex items-center justify-between mt-1">
-                  <p className="text-xs text-muted-foreground">{order.customerPhone}</p>
+                  <p className="text-xs text-muted-foreground">{order.user?.phone}</p>
                   <p className="text-sm font-medium text-foreground">
-                    ₦{order.totalAmount.toLocaleString()}
+                    {formatPrice(order.total_amount)}
                   </p>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {order.location.city}, {order.location.area}
+                  {order.delivery_city}, {order.delivery_area}
                 </p>
               </button>
             ))}

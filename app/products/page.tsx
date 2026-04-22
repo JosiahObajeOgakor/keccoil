@@ -1,23 +1,27 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { ProductCard } from '@/components/ProductCard';
 import { Footer } from '@/components/Footer';
-import { PRODUCTS, CATEGORIES } from '@/lib/mockData';
+import type { Product } from '@/lib/types';
+import * as api from '@/lib/api';
 
 export default function ProductsPage() {
-  const [selectedCategory, setSelectedCategory] = useState('All Products');
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
 
-  const filteredProducts = useMemo(() => {
-    let result = PRODUCTS;
+  useEffect(() => {
+    api.getProducts().then((data) => {
+      setProducts(data);
+      setIsLoading(false);
+    }).catch(() => setIsLoading(false));
+  }, []);
 
-    // Filter by category
-    if (selectedCategory !== 'All Products') {
-      result = result.filter((p) => p.category === selectedCategory);
-    }
+  const filteredProducts = useMemo(() => {
+    let result = products;
 
     // Filter by search query
     if (searchQuery) {
@@ -25,8 +29,7 @@ export default function ProductsPage() {
       result = result.filter(
         (p) =>
           p.name.toLowerCase().includes(query) ||
-          p.description.toLowerCase().includes(query) ||
-          p.category.toLowerCase().includes(query)
+          p.description.toLowerCase().includes(query)
       );
     }
 
@@ -37,12 +40,12 @@ export default function ProductsPage() {
       result = [...result].sort((a, b) => b.price - a.price);
     } else if (sortBy === 'newest') {
       result = [...result].sort(
-        (a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
+        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
       );
     }
 
     return result;
-  }, [selectedCategory, searchQuery, sortBy]);
+  }, [products, searchQuery, sortBy]);
 
   return (
     <>
@@ -81,26 +84,6 @@ export default function ProductsPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full px-4 py-3 border border-border rounded-lg bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
-              </div>
-
-              {/* Categories */}
-              <div className="mb-8">
-                <h3 className="text-sm font-semibold text-foreground mb-4">Categories</h3>
-                <div className="space-y-2">
-                  {CATEGORIES.map((category) => (
-                    <button
-                      key={category}
-                      onClick={() => setSelectedCategory(category)}
-                      className={`w-full text-left px-4 py-2.5 rounded-lg font-medium transition-colors ${
-                        selectedCategory === category
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-card border border-border text-foreground hover:border-primary/50'
-                      }`}
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               {/* Sort Options */}
@@ -144,7 +127,6 @@ export default function ProductsPage() {
                     <button
                       onClick={() => {
                         setSearchQuery('');
-                        setSelectedCategory('All Products');
                         setSortBy('featured');
                       }}
                       className="px-6 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"

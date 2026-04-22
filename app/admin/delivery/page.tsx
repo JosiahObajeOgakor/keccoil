@@ -5,23 +5,18 @@ import { useRouter } from 'next/navigation';
 import { isAdminAuthenticated } from '@/lib/utils/auth';
 import { useOrdersStore } from '@/lib/stores/ordersStore';
 import { StatusBadge } from '@/components/admin/StatusBadge';
+import { formatPrice } from '@/lib/constants';
 import { MapPin, Package, Truck, CheckCircle } from 'lucide-react';
-import type { Order, OrderStatus } from '@/lib/mockData';
+import type { Order, OrderStatus } from '@/lib/types';
 
 function groupByCity(orders: Order[]): Record<string, Order[]> {
   const map: Record<string, Order[]> = {};
   for (const order of orders) {
-    const city = order.location.city;
+    const city = order.delivery_city || 'Unknown';
     if (!map[city]) map[city] = [];
     map[city].push(order);
   }
   return map;
-}
-
-function getDeliveryStatus(order: Order): 'processing' | 'out_for_delivery' | 'delivered' {
-  if (order.status === 'delivered') return 'delivered';
-  if (order.status === 'processing') return 'processing';
-  return 'processing';
 }
 
 export default function DeliveryPage() {
@@ -36,14 +31,13 @@ export default function DeliveryPage() {
     fetchOrders();
   }, [router, fetchOrders]);
 
-  // Only show orders that need delivery attention (paid, processing, delivered)
   const deliveryOrders = orders.filter(
-    (o) => o.status === 'paid' || o.status === 'processing' || o.status === 'delivered'
+    (o) => o.status === 'PAID' || o.status === 'SHIPPED' || o.status === 'DELIVERED'
   );
   const grouped = groupByCity(deliveryOrders);
   const cities = Object.keys(grouped).sort();
 
-  const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
+  const handleStatusChange = async (orderId: number, newStatus: OrderStatus) => {
     await updateStatus(orderId, newStatus);
     await fetchOrders();
   };
@@ -64,10 +58,10 @@ export default function DeliveryPage() {
             <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
               <Package className="w-4 h-4 text-blue-600" />
             </div>
-            <span className="text-sm font-medium text-muted-foreground">Processing</span>
+            <span className="text-sm font-medium text-muted-foreground">To Ship</span>
           </div>
           <p className="text-2xl font-bold text-foreground">
-            {deliveryOrders.filter((o) => o.status === 'paid' || o.status === 'processing').length}
+            {deliveryOrders.filter((o) => o.status === 'PAID').length}
           </p>
         </div>
         <div className="bg-card border border-border rounded-xl p-5">
@@ -75,9 +69,11 @@ export default function DeliveryPage() {
             <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
               <Truck className="w-4 h-4 text-purple-600" />
             </div>
-            <span className="text-sm font-medium text-muted-foreground">Cities</span>
+            <span className="text-sm font-medium text-muted-foreground">Shipped</span>
           </div>
-          <p className="text-2xl font-bold text-foreground">{cities.length}</p>
+          <p className="text-2xl font-bold text-foreground">
+            {deliveryOrders.filter((o) => o.status === 'SHIPPED').length}
+          </p>
         </div>
         <div className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-center gap-3 mb-2">
@@ -87,7 +83,7 @@ export default function DeliveryPage() {
             <span className="text-sm font-medium text-muted-foreground">Delivered</span>
           </div>
           <p className="text-2xl font-bold text-foreground">
-            {deliveryOrders.filter((o) => o.status === 'delivered').length}
+            {deliveryOrders.filter((o) => o.status === 'DELIVERED').length}
           </p>
         </div>
       </div>
@@ -109,7 +105,6 @@ export default function DeliveryPage() {
             const cityOrders = grouped[city];
             return (
               <div key={city} className="bg-card border border-border rounded-xl overflow-hidden">
-                {/* City Header */}
                 <div className="flex items-center justify-between px-6 py-4 bg-secondary/20 border-b border-border">
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-primary" />
@@ -119,44 +114,43 @@ export default function DeliveryPage() {
                     </span>
                   </div>
                   <span className="text-sm font-medium text-foreground">
-                    ₦{cityOrders.reduce((s, o) => s + o.totalAmount, 0).toLocaleString()}
+                    {formatPrice(cityOrders.reduce((s, o) => s + o.total_amount, 0))}
                   </span>
                 </div>
 
-                {/* Orders */}
                 <div className="divide-y divide-border">
                   {cityOrders.map((order) => (
                     <div key={order.id} className="px-6 py-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-sm text-foreground">{order.id}</span>
-                            <StatusBadge type="delivery" status={getDeliveryStatus(order)} />
+                            <span className="font-medium text-sm text-foreground">#{order.id}</span>
+                            <StatusBadge type="order" status={order.status} />
                           </div>
-                          <p className="text-sm text-foreground">{order.customerName}</p>
-                          <p className="text-xs text-muted-foreground">{order.location.area}</p>
+                          <p className="text-sm text-foreground">{order.user?.name || 'Unknown'}</p>
+                          <p className="text-xs text-muted-foreground">{order.delivery_area}</p>
                           <div className="text-xs text-muted-foreground mt-1">
-                            {order.items.map((item) => `${item.quantity}× ${item.name}`).join(', ')}
+                            {order.items?.map((item) => `${item.quantity}× ${item.product_name}`).join(', ')}
                           </div>
                         </div>
                         <div className="flex-shrink-0 flex flex-col gap-1.5">
-                          {order.status === 'paid' && (
+                          {order.status === 'PAID' && (
                             <button
-                              onClick={() => handleStatusChange(order.id, 'processing')}
-                              className="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                              onClick={() => handleStatusChange(order.id, 'SHIPPED')}
+                              className="px-3 py-1.5 text-xs font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                             >
-                              Start Processing
+                              Mark Shipped
                             </button>
                           )}
-                          {order.status === 'processing' && (
+                          {order.status === 'SHIPPED' && (
                             <button
-                              onClick={() => handleStatusChange(order.id, 'delivered')}
+                              onClick={() => handleStatusChange(order.id, 'DELIVERED')}
                               className="px-3 py-1.5 text-xs font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
                             >
                               Mark Delivered
                             </button>
                           )}
-                          {order.status === 'delivered' && (
+                          {order.status === 'DELIVERED' && (
                             <span className="text-xs text-emerald-600 font-medium">✓ Complete</span>
                           )}
                         </div>

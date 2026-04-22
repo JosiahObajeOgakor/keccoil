@@ -1,68 +1,40 @@
 import { create } from 'zustand';
-import type { Customer, Order, ConversationMessage } from '@/lib/mockData';
+import type { User, Order } from '@/lib/types';
 import * as api from '@/lib/api';
 
 interface CustomersState {
-  customers: Customer[];
+  user: User | null;
+  userOrders: Order[];
   isLoading: boolean;
   error: string | null;
 
-  // Per-customer detail
-  selectedPhone: string | null;
-  customerOrders: Order[];
-  conversation: ConversationMessage[];
-  isDetailLoading: boolean;
-
-  // Actions
-  fetchCustomers: () => Promise<void>;
-  selectCustomer: (phone: string | null) => Promise<void>;
-  sendMessage: (text: string) => Promise<void>;
+  lookupByPhone: (phone: string) => Promise<void>;
+  clearUser: () => void;
+  sendWhatsApp: (message: string) => Promise<void>;
 }
 
 export const useCustomersStore = create<CustomersState>((set, get) => ({
-  customers: [],
+  user: null,
+  userOrders: [],
   isLoading: false,
   error: null,
-  selectedPhone: null,
-  customerOrders: [],
-  conversation: [],
-  isDetailLoading: false,
 
-  fetchCustomers: async () => {
-    set({ isLoading: true, error: null });
+  lookupByPhone: async (phone) => {
+    set({ isLoading: true, error: null, user: null, userOrders: [] });
     try {
-      const customers = await api.getCustomers();
-      set({ customers, isLoading: false });
+      const user = await api.getUserByPhone(phone);
+      const ordersData = await api.getMyOrders(phone, 1, 50);
+      set({ user, userOrders: ordersData.orders, isLoading: false });
     } catch {
-      set({ error: 'Failed to fetch customers', isLoading: false });
+      set({ error: 'Customer not found', isLoading: false });
     }
   },
 
-  selectCustomer: async (phone) => {
-    set({ selectedPhone: phone, isDetailLoading: true });
-    if (!phone) {
-      set({ customerOrders: [], conversation: [], isDetailLoading: false });
-      return;
-    }
-    try {
-      const [customerOrders, conversation] = await Promise.all([
-        api.getCustomerOrders(phone),
-        api.getConversation(phone),
-      ]);
-      set({ customerOrders, conversation, isDetailLoading: false });
-    } catch {
-      set({ isDetailLoading: false });
-    }
-  },
+  clearUser: () => set({ user: null, userOrders: [], error: null }),
 
-  sendMessage: async (text) => {
-    const { selectedPhone, conversation } = get();
-    if (!selectedPhone) return;
-    try {
-      const msg = await api.sendMessage(selectedPhone, text);
-      set({ conversation: [...conversation, msg] });
-    } catch {
-      // silent
-    }
+  sendWhatsApp: async (message) => {
+    const { user } = get();
+    if (!user) return;
+    await api.forwardWhatsApp(user.phone, message);
   },
 }));

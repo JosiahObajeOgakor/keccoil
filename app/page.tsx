@@ -1,10 +1,12 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Header } from '@/components/Header';
 import { ProductCard } from '@/components/ProductCard';
 import { Footer } from '@/components/Footer';
 import { HeroSlider, type HeroSlide } from '@/components/HeroSlider';
-import { PRODUCTS } from '@/lib/mockData';
+import type { Product } from '@/lib/types';
+import * as api from '@/lib/api';
 import Link from 'next/link';
 
 const heroSlides: HeroSlide[] = [
@@ -47,7 +49,17 @@ const heroSlides: HeroSlide[] = [
 ];
 
 export default function Home() {
-  const featuredProducts = PRODUCTS.slice(0, 6);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    api.getProducts().then((data) => {
+      setProducts(data);
+      setIsLoading(false);
+    }).catch(() => setIsLoading(false));
+  }, []);
+
+  const featuredProducts = products.slice(0, 6);
 
   return (
     <>
@@ -70,9 +82,13 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+            {isLoading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-80 bg-secondary/30 rounded-xl animate-pulse" />
+                ))
+              : featuredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
           </div>
 
           <div className="text-center">
