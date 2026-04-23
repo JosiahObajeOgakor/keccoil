@@ -1,14 +1,15 @@
 import type { MetadataRoute } from 'next';
-import { PRODUCTS } from '@/lib/mockData';
 
 export const dynamic = 'force-static';
+
+const PRODUCT_IDS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://keceoil.com';
 
-  const productUrls = PRODUCTS.map((product) => ({
-    url: `${baseUrl}/products/${product.id}`,
-    lastModified: new Date(product.lastUpdated),
+  const productUrls = PRODUCT_IDS.map((id) => ({
+    url: `${baseUrl}/products/${id}`,
+    lastModified: new Date(),
     changeFrequency: 'weekly' as const,
     priority: 0.8,
   }));

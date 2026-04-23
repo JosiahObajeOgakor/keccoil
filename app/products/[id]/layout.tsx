@@ -1,8 +1,6 @@
-import { PRODUCTS } from '@/lib/mockData';
-
 export function generateStaticParams() {
-  return PRODUCTS.map((product) => ({
-    id: product.id,
+  return [1, 2, 3, 4, 5, 6, 7, 8].map((id) => ({
+    id: String(id),
   }));
 }
 

@@ -39,6 +39,7 @@ export interface User {
 }
 
 export interface OrderItem {
+  product_name: any;
   id: number;
   order_id: number;
   product_id: number;

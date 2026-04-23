@@ -1,0 +1,49 @@
+{
+  "Changes": [
+    {
+      "Action": "DELETE",
+      "ResourceRecordSet": {
+        "Name": "keceoil.com.",
+        "Type": "A",
+        "AliasTarget": {
+          "HostedZoneId": "Z2FDTNDATAQYW2",
+          "DNSName": "dmrhtbq81k41v.cloudfront.net.",
+          "EvaluateTargetHealth": false
+        }
+      }
+    },
+    {
+      "Action": "DELETE",
+      "ResourceRecordSet": {
+        "Name": "_58be3c5f9deca97477d8d1e898644cb8.keceoil.com.",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          {"Value": "_9e0c06b53b7ceeacc2bbe58f70a80ee1.jkddzztszm.acm-validations.aws."}
+        ]
+      }
+    },
+    {
+      "Action": "DELETE",
+      "ResourceRecordSet": {
+        "Name": "api.keceoil.com.",
+        "Type": "A",
+        "TTL": 300,
+        "ResourceRecords": [
+          {"Value": "3.19.190.129"}
+        ]
+      }
+    },
+    {
+      "Action": "DELETE",
+      "ResourceRecordSet": {
+        "Name": "www.keceoil.com.",
+        "Type": "CNAME",
+        "TTL": 300,
+        "ResourceRecords": [
+          {"Value": "dmrhtbq81k41v.cloudfront.net"}
+        ]
+      }
+    }
+  ]
+}
