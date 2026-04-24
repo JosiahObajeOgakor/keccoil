@@ -1,7 +1,5 @@
 'use client';
 
-import { toast } from 'sonner';
-
 export function Footer() {
   return (
     <footer className="border-t border-border bg-secondary/30 mt-16">
@@ -54,12 +52,14 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <button
-                  onClick={() => toast.info('WhatsApp ordering is currently being configured. Please use our chat assistant or check back soon!', { duration: 4000 })}
+                <a
+                  href="https://wa.me/2347039986047?text=Hi"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="hover:text-primary transition-colors"
                 >
                   WhatsApp Chat
-                </button>
+                </a>
               </li>
             </ul>
           </div>

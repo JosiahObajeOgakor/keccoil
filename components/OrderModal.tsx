@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { toast } from 'sonner';
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -71,11 +70,11 @@ export function OrderModal({ isOpen, onClose, productName, whatsappLink }: Order
         {/* Options */}
         <div className="p-6 pt-4 space-y-3">
           {/* WhatsApp */}
-          <button
-            onClick={() => {
-              onClose();
-              toast.info('WhatsApp ordering is currently being configured. Please use our chat assistant or check back soon!', { duration: 4000 });
-            }}
+          <a
+            href={whatsappLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClose}
             className="flex items-center gap-4 w-full p-4 rounded-xl border border-border hover:border-green-500/50 hover:bg-green-50/50 dark:hover:bg-green-950/20 transition-all group"
           >
             <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center flex-shrink-0">
@@ -94,7 +93,7 @@ export function OrderModal({ isOpen, onClose, productName, whatsappLink }: Order
             <svg className="w-5 h-5 text-muted-foreground group-hover:text-green-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-          </button>
+          </a>
 
           {/* Chat Assistant */}
           <button

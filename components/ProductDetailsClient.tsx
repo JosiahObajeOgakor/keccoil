@@ -83,7 +83,7 @@ export function ProductDetailsClient({ productId }: ProductDetailsClientProps) {
   ).slice(0, 3);
 
   const whatsappLink = generateWhatsAppLink(
-    '234 812 345 6789',
+    '2347039986047',
     product.name,
     String(product.id),
     quantity

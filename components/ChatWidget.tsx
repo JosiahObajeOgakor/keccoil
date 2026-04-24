@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Bot, User, Minus, Phone, CreditCard } from 'lucide-react';
-import { sendChatMessage } from '@/lib/api';
-import type { ChatResponse } from '@/lib/types';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { MessageCircle, X, Send, Bot, User, Minus, Phone, CreditCard, Loader2, CheckCircle2, XCircle, Download } from 'lucide-react';
+import { sendChatMessage, getMyPayments } from '@/lib/api';
+import { formatPrice } from '@/lib/constants';
+import type { ChatResponse, Payment } from '@/lib/types';
+
+type PaymentPollStatus = 'polling' | 'success' | 'failed' | 'timeout';
 
 interface ChatMessage {
   id: string;
@@ -11,6 +14,8 @@ interface ChatMessage {
   text: string;
   timestamp: string;
   meta?: ChatResponse;
+  paymentStatus?: PaymentPollStatus;
+  paymentData?: Payment;
 }
 
 const GREETING: ChatMessage = {
@@ -30,6 +35,141 @@ export function ChatWidget() {
   const [phoneInput, setPhoneInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    };
+  }, []);
+
+  const updateMessage = useCallback((msgId: string, updates: Partial<ChatMessage>) => {
+    setMessages((prev) => prev.map((m) => (m.id === msgId ? { ...m, ...updates } : m)));
+  }, []);
+
+  const openReceipt = useCallback((payment: Payment, order?: ChatResponse['order']) => {
+    const w = window.open('', '_blank', 'width=420,height=600');
+    if (!w) return;
+    w.document.write(`<!DOCTYPE html><html><head><title>Receipt #${payment.reference}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:24px;color:#1a1a1a;max-width:400px;margin:0 auto}
+.header{text-align:center;border-bottom:2px solid #16a34a;padding-bottom:16px;margin-bottom:16px}
+.header h1{font-size:20px;color:#16a34a;margin-bottom:4px}
+.header p{font-size:12px;color:#666}
+.badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:600;margin-top:8px}
+.badge.success{background:#dcfce7;color:#16a34a}
+.badge.failed{background:#fee2e2;color:#dc2626}
+.badge.pending{background:#fef3c7;color:#d97706}
+.row{display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid #f0f0f0}
+.row .label{color:#666}
+.row .value{font-weight:500}
+.total{font-size:16px;font-weight:700;border-top:2px solid #1a1a1a;padding-top:12px;margin-top:8px}
+.footer{text-align:center;margin-top:24px;font-size:11px;color:#999}
+.print-btn{display:block;margin:20px auto 0;padding:10px 24px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+@media print{.print-btn{display:none}}
+</style></head><body>
+<div class="header">
+<h1>🛢️ KeceoOil</h1>
+<p>Premium Red Palm Oil</p>
+<p style="margin-top:4px">Payment Receipt</p>
+</div>
+<div class="badge ${payment.status === 'SUCCESS' ? 'success' : payment.status === 'FAILED' ? 'failed' : 'pending'}" style="text-align:center;width:100%;margin-bottom:16px">
+${payment.status === 'SUCCESS' ? '✅ Payment Successful' : payment.status === 'FAILED' ? '❌ Payment Failed' : '⏳ Payment Pending'}
+</div>
+<div class="row"><span class="label">Reference</span><span class="value" style="font-family:monospace;font-size:11px">${payment.reference}</span></div>
+<div class="row"><span class="label">Amount</span><span class="value">${formatPrice(payment.amount)}</span></div>
+<div class="row"><span class="label">Currency</span><span class="value">${payment.currency || 'NGN'}</span></div>
+<div class="row"><span class="label">Provider</span><span class="value" style="text-transform:capitalize">${payment.provider || 'Paystack'}</span></div>
+<div class="row"><span class="label">Date</span><span class="value">${new Date(payment.completed_at || payment.created_at).toLocaleString()}</span></div>
+${order ? `<div class="row"><span class="label">Order</span><span class="value">#${order.id}</span></div>
+<div class="row total"><span class="label">Total</span><span class="value">${formatPrice(order.total_amount)}</span></div>` : ''}
+<div class="footer">
+<p>KeceoOil — keceoil.com</p>
+<p style="margin-top:4px">Thank you for your purchase!</p>
+</div>
+<button class="print-btn" onclick="window.print()">🖨️ Print Receipt</button>
+</body></html>`);
+    w.document.close();
+  }, []);
+
+  const startPaymentPolling = useCallback(
+    (reference: string, msgId: string, order?: ChatResponse['order']) => {
+      if (!phone) return;
+      let attempts = 0;
+      const maxAttempts = 60; // 5 minutes at 5s intervals
+
+      // Add polling message
+      const pollMsgId = `pay-poll-${Date.now()}`;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: pollMsgId,
+          sender: 'ai',
+          text: 'Verifying your payment...',
+          timestamp: new Date().toISOString(),
+          paymentStatus: 'polling',
+        },
+      ]);
+
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+
+      pollTimerRef.current = setInterval(async () => {
+        attempts++;
+        try {
+          const data = await getMyPayments(phone, 1, 20);
+          const found = data.payments?.find((p) => p.reference === reference);
+          if (found && found.status === 'SUCCESS') {
+            clearInterval(pollTimerRef.current!);
+            pollTimerRef.current = null;
+            updateMessage(pollMsgId, {
+              text: `✅ Payment successful!\n\nRef: ${found.reference}\nAmount: ${formatPrice(found.amount)}`,
+              paymentStatus: 'success',
+              paymentData: found,
+              meta: order ? { order } as unknown as ChatResponse : undefined,
+            });
+            // Remove the Pay Now button from original message
+            updateMessage(msgId, {
+              meta: undefined,
+            });
+          } else if (found && found.status === 'FAILED') {
+            clearInterval(pollTimerRef.current!);
+            pollTimerRef.current = null;
+            updateMessage(pollMsgId, {
+              text: '❌ Payment failed. Please try again or contact support.',
+              paymentStatus: 'failed',
+            });
+          } else if (attempts >= maxAttempts) {
+            clearInterval(pollTimerRef.current!);
+            pollTimerRef.current = null;
+            updateMessage(pollMsgId, {
+              text: '⏳ Payment verification timed out. If you completed the payment, it will be confirmed shortly. Please check back later.',
+              paymentStatus: 'timeout',
+            });
+          }
+        } catch {
+          if (attempts >= maxAttempts) {
+            clearInterval(pollTimerRef.current!);
+            pollTimerRef.current = null;
+            updateMessage(pollMsgId, {
+              text: '⏳ Could not verify payment right now. If you completed the payment, it will be confirmed shortly.',
+              paymentStatus: 'timeout',
+            });
+          }
+        }
+      }, 5000);
+    },
+    [phone, updateMessage]
+  );
+
+  const handlePayNowClick = useCallback(
+    (url: string, reference: string, msgId: string, order?: ChatResponse['order']) => {
+      window.open(url, '_blank', 'noopener,noreferrer');
+      startPaymentPolling(reference, msgId, order);
+    },
+    [startPaymentPolling]
+  );
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -272,17 +412,65 @@ export function ChatWidget() {
                       : 'bg-card border border-border text-foreground rounded-bl-md'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap">{msg.text}</p>
+                  {/* Payment polling loader */}
+                  {msg.paymentStatus === 'polling' && (
+                    <div className="flex items-center gap-2 py-1">
+                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      <span className="text-muted-foreground">{msg.text}</span>
+                    </div>
+                  )}
+
+                  {/* Payment success */}
+                  {msg.paymentStatus === 'success' && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-green-600">
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span className="font-semibold">Payment Successful!</span>
+                      </div>
+                      <p className="whitespace-pre-wrap text-xs text-muted-foreground">{msg.text.split('\n').slice(1).join('\n').trim()}</p>
+                      {msg.paymentData && (
+                        <button
+                          onClick={() => openReceipt(msg.paymentData!, msg.meta?.order)}
+                          className="mt-2 flex items-center justify-center gap-2 w-full px-4 py-2 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors text-xs"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          Download Receipt
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Payment failed */}
+                  {msg.paymentStatus === 'failed' && (
+                    <div className="flex items-center gap-2 text-red-500">
+                      <XCircle className="w-4 h-4" />
+                      <span>{msg.text}</span>
+                    </div>
+                  )}
+
+                  {/* Payment timeout */}
+                  {msg.paymentStatus === 'timeout' && (
+                    <p className="whitespace-pre-wrap text-muted-foreground">{msg.text}</p>
+                  )}
+
+                  {/* Normal message */}
+                  {!msg.paymentStatus && <p className="whitespace-pre-wrap">{msg.text}</p>}
+
                   {msg.meta?.payment?.authorization_url && (
-                    <a
-                      href={msg.meta.payment.authorization_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors text-sm no-underline"
+                    <button
+                      onClick={() =>
+                        handlePayNowClick(
+                          msg.meta!.payment!.authorization_url,
+                          msg.meta!.payment!.reference,
+                          msg.id,
+                          msg.meta!.order
+                        )
+                      }
+                      className="mt-3 flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors text-sm"
                     >
                       <CreditCard className="w-4 h-4" />
                       Pay Now — {msg.meta.payment.amount ? `₦${(msg.meta.payment.amount / 100).toLocaleString()}` : 'Paystack'}
-                    </a>
+                    </button>
                   )}
                 </div>
               </div>
