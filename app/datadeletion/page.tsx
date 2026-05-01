@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Data Deletion',
-  description: 'KeceoOil data deletion instructions — how to request deletion of your personal data.',
+  description: 'Kecc Oil data deletion instructions — how to request deletion of your personal data.',
 };
 
 export default function DataDeletionPage() {
@@ -17,7 +17,7 @@ export default function DataDeletionPage() {
           <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
             <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">Data Deletion Instructions</h1>
             <p className="text-lg text-muted-foreground">
-              How to request deletion of your personal data from KeceoOil
+              How to request deletion of your personal data from Kecc Oil
             </p>
           </div>
         </section>
@@ -30,7 +30,7 @@ export default function DataDeletionPage() {
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-4">Your Right to Data Deletion</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Under the Nigeria Data Protection Regulation (NDPR), you have the right to request the deletion of your personal data held by KeceoOil. We are committed to respecting your privacy and will process all legitimate deletion requests promptly.
+                Under the Nigeria Data Protection Regulation (NDPR), you have the right to request the deletion of your personal data held by Kecc Oil. We are committed to respecting your privacy and will process all legitimate deletion requests promptly.
               </p>
             </div>
 
@@ -38,7 +38,7 @@ export default function DataDeletionPage() {
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-4">What Data We May Hold</h2>
               <p className="text-muted-foreground leading-relaxed mb-3">
-                Depending on your interactions with KeceoOil, we may hold the following data about you:
+                Depending on your interactions with Kecc Oil, we may hold the following data about you:
               </p>
               <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
                 <li><strong className="text-foreground">Contact Information:</strong> Phone number, name, and email address.</li>

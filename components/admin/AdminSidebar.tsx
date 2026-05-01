@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -8,6 +9,8 @@ import {
   Package,
   Users,
   Truck,
+  Building2,
+  CreditCard,
   LogOut,
   Menu,
   X,
@@ -22,6 +25,8 @@ const navItems = [
   { href: '/admin/products', label: 'Products', icon: Package },
   { href: '/admin/customers', label: 'Customers', icon: Users },
   { href: '/admin/delivery', label: 'Delivery', icon: Truck },
+  { href: '/admin/tenants', label: 'Tenants', icon: Building2 },
+  { href: '/admin/billing', label: 'Billing', icon: CreditCard },
 ];
 
 export function AdminSidebar() {
@@ -41,13 +46,15 @@ export function AdminSidebar() {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
-        <img
+        <Image
           src="https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1776681497/download_5_qdevvi.webp"
-          alt="KeceoOil"
+          alt="Kecc Oil"
+          width={32}
+          height={32}
           className="w-8 h-8 rounded-lg object-cover"
         />
         <div>
-          <h1 className="font-semibold text-foreground text-sm">KeceoOil</h1>
+          <h1 className="font-semibold text-foreground text-sm">Kecc Oil</h1>
           <p className="text-xs text-muted-foreground">Admin Panel</p>
         </div>
       </div>

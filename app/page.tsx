@@ -5,6 +5,7 @@ import { Header } from '@/components/Header';
 import { ProductCard } from '@/components/ProductCard';
 import { Footer } from '@/components/Footer';
 import { HeroSlider, type HeroSlide } from '@/components/HeroSlider';
+import { DeliveryPricing } from '@/components/DeliveryPricing';
 import type { Product } from '@/lib/types';
 import * as api from '@/lib/api';
 import Link from 'next/link';
@@ -101,12 +102,15 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Why Choose KeceoOil */}
+        {/* Delivery Pricing */}
+        <DeliveryPricing />
+
+        {/* Why Choose Kecc Oil */}
         <section className="bg-secondary/30 border-t border-border">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
             <div className="max-w-3xl mx-auto">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 text-center">
-                Why Choose KeceoOil?
+                Why Choose Kecc Oil?
               </h2>
               <p className="text-lg text-muted-foreground text-center mb-12">
                 Sourced from trusted local producers. Certified quality, unbeatable prices, delivered to your doorstep.

@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: 'KeceoOil privacy policy — how we collect, use, and protect your personal information.',
+  description: 'Kecc Oil privacy policy — how we collect, use, and protect your personal information.',
 };
 
 export default function PrivacyPolicyPage() {
@@ -30,7 +30,7 @@ export default function PrivacyPolicyPage() {
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-4">1. Introduction</h2>
               <p className="text-muted-foreground leading-relaxed">
-                KeceoOil (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website at keceoil.com, use our AI chat assistant, or place an order through our platform. By using our services, you agree to the collection and use of information in accordance with this policy.
+                Kecc Oil (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website at keceoil.com, use our AI chat assistant, or place an order through our platform. By using our services, you agree to the collection and use of information in accordance with this policy.
               </p>
             </div>
 
@@ -161,7 +161,7 @@ export default function PrivacyPolicyPage() {
               <ul className="space-y-2 text-muted-foreground">
                 <li><strong className="text-foreground">Email:</strong> <a href="mailto:info@keceoil.com" className="text-primary hover:underline">info@keceoil.com</a></li>
                 <li><strong className="text-foreground">Website:</strong> <a href="https://keceoil.com" className="text-primary hover:underline">keceoil.com</a></li>
-                <li><strong className="text-foreground">Business Name:</strong> KeceoOil Nigeria</li>
+                <li><strong className="text-foreground">Business Name:</strong> Kecc Oil Nigeria</li>
               </ul>
             </div>
 

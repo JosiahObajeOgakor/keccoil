@@ -1,15 +1,17 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import type { DeliveryMethod } from '@/lib/utils/whatsapp';
 
 interface OrderModalProps {
   isOpen: boolean;
   onClose: () => void;
   productName: string;
   whatsappLink: string;
+  deliveryMethod?: DeliveryMethod;
 }
 
-export function OrderModal({ isOpen, onClose, productName, whatsappLink }: OrderModalProps) {
+export function OrderModal({ isOpen, onClose, productName, whatsappLink, deliveryMethod }: OrderModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,6 +27,10 @@ export function OrderModal({ isOpen, onClose, productName, whatsappLink }: Order
 
   const handleChatAssistant = () => {
     onClose();
+    // Store delivery context for the chat widget to pick up
+    const deliveryLabel = deliveryMethod === 'pickup' ? 'Pickup from shop' : 'Dispatch to my address';
+    const chatMessage = `I want to order ${productName}. Delivery: ${deliveryLabel}`;
+    window.dispatchEvent(new CustomEvent('chat-prefill', { detail: { message: chatMessage } }));
     // Small delay so modal closes first
     setTimeout(() => {
       const chatBtn = document.querySelector('[aria-label="Open chat"]') as HTMLButtonElement;
@@ -65,6 +71,12 @@ export function OrderModal({ isOpen, onClose, productName, whatsappLink }: Order
           <p className="text-sm text-muted-foreground">
             {productName}
           </p>
+          {deliveryMethod && (
+            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+              {deliveryMethod === 'pickup' ? '🏪' : '🚚'}
+              {deliveryMethod === 'pickup' ? 'Pickup from shop' : 'Dispatch to address'}
+            </p>
+          )}
         </div>
 
         {/* Options */}

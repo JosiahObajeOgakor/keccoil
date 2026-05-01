@@ -10,8 +10,42 @@ import type {
   PaginatedCustomerOrders,
   PaginatedCustomerPayments,
   HealthCheck,
+  ChatSessionStart,
+  ChatSessionStatus,
+  ChatResponse,
+  RegisterRequest,
+  RegisterResponse,
+  LoginResponse,
+  RefreshResponse,
+  TenantProduct,
+  TenantOrder,
+  PaginatedTenantOrders,
+  TenantCustomer,
+  PaginatedTenantCustomers,
+  TenantAnalyticsOverview,
+  CustomerAnalytics,
+  FinanceSummary,
+  PaginatedFinancePayments,
+  TenantSettings,
+  WalletBalance,
+  PaginatedWalletTransactions,
+  FundWalletRequest,
+  FundWalletResponse,
+  BillingUsage,
+  Subscription,
+  BillingInvoice,
+  ApiKeyInfo,
+  AdminTenantListItem,
+  Tenant,
+  TenantUser,
+  CreateTenantRequest,
+  CreateTenantUserRequest,
+  AdminRevenueStats,
+  BillingPlan,
 } from './types';
 import { getAdminKey } from './utils/auth';
+import { useLoaderStore } from './stores/loaderStore';
+import { useAuthStore } from './stores/authStore';
 
 // ─── Helpers ────────────────────────────────────────────────────
 
@@ -31,33 +65,155 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return res.json();
 }
 
+function withLoader<T>(promise: Promise<T>): Promise<T> {
+  const { start, end } = useLoaderStore.getState();
+  start();
+  return promise.finally(end);
+}
+
 function publicFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  return fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
-  }).then((r) => handleResponse<T>(r));
+  return withLoader(
+    fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      headers: { 'Content-Type': 'application/json', ...init?.headers },
+    }).then((r) => handleResponse<T>(r))
+  );
 }
 
 function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const key = getAdminKey();
   if (!key) throw new ApiError('Not authenticated', 401);
-  return fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Admin-Key': key,
-      ...init?.headers,
-    },
-  }).then((r) => handleResponse<T>(r));
+  return withLoader(
+    fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Admin-Key': key,
+        ...init?.headers,
+      },
+    }).then((r) => handleResponse<T>(r))
+  );
 }
 
 function adminFetchRaw(path: string, init?: RequestInit): Promise<Response> {
   const key = getAdminKey();
   if (!key) throw new ApiError('Not authenticated', 401);
-  return fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: { 'X-Admin-Key': key, ...init?.headers },
+  return withLoader(
+    fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      headers: { 'X-Admin-Key': key, ...init?.headers },
+    })
+  );
+}
+
+let isRefreshing = false;
+let refreshPromise: Promise<string | null> | null = null;
+
+async function doRefresh(): Promise<string | null> {
+  const { getRefreshToken, setAccessToken, logout } = useAuthStore.getState();
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) {
+    logout();
+    return null;
+  }
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    if (!res.ok) {
+      logout();
+      return null;
+    }
+    const data: RefreshResponse = await res.json();
+    setAccessToken(data.access_token);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('keceoil_refresh_token', data.refresh_token);
+    }
+    return data.access_token;
+  } catch {
+    logout();
+    return null;
+  }
+}
+
+async function refreshAccessTokenSilent(): Promise<string | null> {
+  if (isRefreshing && refreshPromise) return refreshPromise;
+  isRefreshing = true;
+  refreshPromise = doRefresh().finally(() => {
+    isRefreshing = false;
+    refreshPromise = null;
   });
+  return refreshPromise;
+}
+
+async function tenantFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const { start, end } = useLoaderStore.getState();
+  start();
+  try {
+    let token = useAuthStore.getState().accessToken;
+    if (!token) throw new ApiError('Not authenticated', 401);
+
+    let res = await fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        ...init?.headers,
+      },
+    });
+
+    if (res.status === 401) {
+      const newToken = await refreshAccessTokenSilent();
+      if (!newToken) throw new ApiError('Session expired', 401);
+      res = await fetch(`${API_BASE_URL}${path}`, {
+        ...init,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${newToken}`,
+          ...init?.headers,
+        },
+      });
+    }
+
+    return await handleResponse<T>(res);
+  } finally {
+    end();
+  }
+}
+
+async function tenantFetchRaw(path: string, init?: RequestInit): Promise<Response> {
+  const { start, end } = useLoaderStore.getState();
+  start();
+  try {
+    let token = useAuthStore.getState().accessToken;
+    if (!token) throw new ApiError('Not authenticated', 401);
+
+    let res = await fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...init?.headers,
+      },
+    });
+
+    if (res.status === 401) {
+      const newToken = await refreshAccessTokenSilent();
+      if (!newToken) throw new ApiError('Session expired', 401);
+      res = await fetch(`${API_BASE_URL}${path}`, {
+        ...init,
+        headers: {
+          Authorization: `Bearer ${newToken}`,
+          ...init?.headers,
+        },
+      });
+    }
+
+    return res;
+  } finally {
+    end();
+  }
 }
 
 function qs(params: Record<string, string | number | undefined>): string {
@@ -80,6 +236,30 @@ export async function getProducts(): Promise<Product[]> {
 
 export async function getProductById(id: number): Promise<Product> {
   return publicFetch<Product>(`/products/${id}`);
+}
+
+// ─── Pricing ────────────────────────────────────────────────────
+
+export interface DeliveryTier {
+  range: string;
+  fee_naira: number;
+  note: string;
+}
+
+export interface PricingData {
+  contact: {
+    phone: string;
+    use_cases: string[];
+  };
+  delivery: {
+    outside_lagos: string;
+    tiers: DeliveryTier[];
+  };
+  products: Product[];
+}
+
+export async function getPricing(): Promise<PricingData> {
+  return publicFetch<PricingData>('/pricing');
 }
 
 // ─── Customer Endpoints ─────────────────────────────────────────
@@ -253,25 +433,74 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   };
 }
 
-// ─── Chat ───────────────────────────────────────────────────────
+// ─── Chat (legacy test endpoint) ────────────────────────────────
 
 export async function sendChatMessage(
   phone: string,
   message: string
-): Promise<import('./types').ChatResponse> {
-  // The chat endpoint requires an admin key even for public use.
-  // Try the user's admin key first, fall back to the public chat key.
+): Promise<ChatResponse> {
   const key =
     getAdminKey() || process.env.NEXT_PUBLIC_CHAT_API_KEY || '';
-  const res = await fetch(`${API_BASE_URL}/test/chat`, {
+  const { start, end } = useLoaderStore.getState();
+  start();
+  try {
+    const res = await fetch(`${API_BASE_URL}/test/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Admin-Key': key,
+      },
+      body: JSON.stringify({ phone, message }),
+    });
+    return await handleResponse(res);
+  } finally {
+    end();
+  }
+}
+
+// ─── Chat Sessions ──────────────────────────────────────────────
+
+export async function startChatSession(
+  phone: string
+): Promise<ChatSessionStart> {
+  return publicFetch<ChatSessionStart>('/chat/start', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Admin-Key': key,
-    },
-    body: JSON.stringify({ phone, message }),
+    body: JSON.stringify({ phone }),
   });
-  return handleResponse(res);
+}
+
+export async function sendTokenChatMessage(
+  token: string,
+  message: string
+): Promise<ChatResponse> {
+  const { start, end } = useLoaderStore.getState();
+  start();
+  try {
+    const res = await fetch(`${API_BASE_URL}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, message }),
+    });
+    if (res.status === 401) {
+      throw new ApiError('Session expired', 401);
+    }
+    return await handleResponse<ChatResponse>(res);
+  } finally {
+    end();
+  }
+}
+
+export async function checkChatSession(
+  token: string
+): Promise<ChatSessionStatus> {
+  return publicFetch<ChatSessionStatus>(`/chat/session${qs({ token })}`);
+}
+
+export async function endChatSession(token: string): Promise<void> {
+  await publicFetch('/chat/session', {
+    method: 'DELETE',
+    body: JSON.stringify({ token }),
+  });
 }
 
 // ─── Auth Validation ────────────────────────────────────────────
@@ -285,4 +514,310 @@ export async function validateAdminKey(key: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+// ─── Tenant Auth ────────────────────────────────────────────────
+
+export async function registerTenant(data: RegisterRequest): Promise<RegisterResponse> {
+  return publicFetch<RegisterResponse>('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function loginTenant(email: string, password: string): Promise<LoginResponse> {
+  return publicFetch<LoginResponse>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function refreshAccessToken(refreshToken: string): Promise<RefreshResponse> {
+  return publicFetch<RefreshResponse>('/auth/refresh', {
+    method: 'POST',
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  });
+}
+
+export async function logoutTenant(refreshToken: string): Promise<void> {
+  const token = useAuthStore.getState().accessToken;
+  await fetch(`${API_BASE_URL}/auth/logout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  });
+}
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  await tenantFetch('/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+  });
+}
+
+// ─── Tenant Products ────────────────────────────────────────────
+
+export async function getTenantProducts(): Promise<TenantProduct[]> {
+  const data = await tenantFetch<{ products: TenantProduct[] }>('/tenant/products');
+  return data.products ?? [];
+}
+
+export async function createTenantProduct(
+  product: Omit<TenantProduct, 'id' | 'created_at' | 'updated_at'>
+): Promise<TenantProduct> {
+  return tenantFetch<TenantProduct>('/tenant/products', {
+    method: 'POST',
+    body: JSON.stringify(product),
+  });
+}
+
+export async function updateTenantProduct(id: number, data: Partial<TenantProduct>): Promise<TenantProduct> {
+  return tenantFetch<TenantProduct>(`/tenant/products/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteTenantProduct(id: number): Promise<void> {
+  await tenantFetch(`/tenant/products/${id}`, { method: 'DELETE' });
+}
+
+// ─── Tenant Orders ──────────────────────────────────────────────
+
+export async function getTenantOrders(params?: {
+  status?: string;
+  page?: number;
+  limit?: number;
+}): Promise<PaginatedTenantOrders> {
+  return tenantFetch<PaginatedTenantOrders>(`/tenant/orders${qs(params ?? {})}`);
+}
+
+export async function getTenantOrder(id: number): Promise<TenantOrder> {
+  return tenantFetch<TenantOrder>(`/tenant/orders/${id}`);
+}
+
+export async function updateTenantOrderStatus(
+  id: number,
+  status: string
+): Promise<void> {
+  await tenantFetch(`/tenant/orders/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+}
+
+export async function exportTenantOrdersCSV(): Promise<Response> {
+  return tenantFetchRaw('/tenant/orders/export/csv');
+}
+
+// ─── Tenant Customers ───────────────────────────────────────────
+
+export async function getTenantCustomers(params?: {
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<PaginatedTenantCustomers> {
+  return tenantFetch<PaginatedTenantCustomers>(`/tenant/customers${qs(params ?? {})}`);
+}
+
+export async function getTenantCustomer(id: number): Promise<TenantCustomer> {
+  return tenantFetch<TenantCustomer>(`/tenant/customers/${id}`);
+}
+
+export async function getTenantCustomerOrders(id: number): Promise<{ orders: TenantOrder[] }> {
+  return tenantFetch<{ orders: TenantOrder[] }>(`/tenant/customers/${id}/orders`);
+}
+
+// ─── Tenant Analytics ───────────────────────────────────────────
+
+export async function getTenantAnalyticsOverview(): Promise<TenantAnalyticsOverview> {
+  return tenantFetch<TenantAnalyticsOverview>('/tenant/analytics/overview');
+}
+
+export async function getTenantCustomerAnalytics(customerId: number): Promise<CustomerAnalytics> {
+  return tenantFetch<CustomerAnalytics>(`/tenant/analytics/customers/${customerId}`);
+}
+
+// ─── Tenant Finance ─────────────────────────────────────────────
+
+export async function getTenantFinanceSummary(): Promise<FinanceSummary> {
+  return tenantFetch<FinanceSummary>('/tenant/finance/summary');
+}
+
+export async function getTenantFinancePayments(params?: {
+  page?: number;
+  limit?: number;
+}): Promise<PaginatedFinancePayments> {
+  return tenantFetch<PaginatedFinancePayments>(`/tenant/finance/payments${qs(params ?? {})}`);
+}
+
+export async function exportTenantFinanceCSV(): Promise<Response> {
+  return tenantFetchRaw('/tenant/finance/export/csv');
+}
+
+// ─── Tenant Settings ────────────────────────────────────────────
+
+export async function getTenantSettings(): Promise<TenantSettings> {
+  return tenantFetch<TenantSettings>('/tenant/settings');
+}
+
+export async function updateTenantSettings(data: Partial<TenantSettings>): Promise<void> {
+  await tenantFetch('/tenant/settings', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+// ─── Tenant Wallet ──────────────────────────────────────────────
+
+export async function getTenantWalletBalance(): Promise<WalletBalance> {
+  return tenantFetch<WalletBalance>('/tenant/wallet/balance');
+}
+
+export async function fundTenantWallet(data: FundWalletRequest): Promise<FundWalletResponse> {
+  return tenantFetch<FundWalletResponse>('/tenant/wallet/fund', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getTenantWalletTransactions(params?: {
+  page?: number;
+  limit?: number;
+}): Promise<PaginatedWalletTransactions> {
+  return tenantFetch<PaginatedWalletTransactions>(`/tenant/wallet/transactions${qs(params ?? {})}`);
+}
+
+// ─── Tenant API Keys ────────────────────────────────────────────
+
+export async function getTenantApiKeys(): Promise<ApiKeyInfo> {
+  return tenantFetch<ApiKeyInfo>('/tenant/api-keys');
+}
+
+// ─── Billing ────────────────────────────────────────────────────
+
+export async function getBillingUsage(): Promise<BillingUsage> {
+  return tenantFetch<BillingUsage>('/billing/usage');
+}
+
+export async function getBillingSubscription(): Promise<Subscription> {
+  return tenantFetch<Subscription>('/billing/subscription');
+}
+
+export async function getBillingInvoices(): Promise<{ invoices: BillingInvoice[] }> {
+  return tenantFetch<{ invoices: BillingInvoice[] }>('/billing/invoices');
+}
+
+export async function payBillingInvoice(id: number): Promise<{ payment_url: string }> {
+  return tenantFetch<{ payment_url: string }>(`/billing/invoices/${id}/pay`);
+}
+
+// ─── Admin Tenant Management ────────────────────────────────────
+
+export async function adminGetTenants(): Promise<AdminTenantListItem[]> {
+  return adminFetch<AdminTenantListItem[]>('/admin/tenants');
+}
+
+export async function adminGetTenant(id: number): Promise<Tenant> {
+  return adminFetch<Tenant>(`/admin/tenants/${id}`);
+}
+
+export async function adminCreateTenant(data: CreateTenantRequest): Promise<Tenant> {
+  return adminFetch<Tenant>('/admin/tenants', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function adminUpdateTenant(id: number, data: Partial<CreateTenantRequest>): Promise<Tenant> {
+  return adminFetch<Tenant>(`/admin/tenants/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function adminDeleteTenant(id: number): Promise<void> {
+  await adminFetch(`/admin/tenants/${id}`, { method: 'DELETE' });
+}
+
+export async function adminGetTenantUsers(tenantId: number): Promise<TenantUser[]> {
+  return adminFetch<TenantUser[]>(`/admin/tenants/${tenantId}/users`);
+}
+
+export async function adminCreateTenantUser(tenantId: number, data: CreateTenantUserRequest): Promise<TenantUser> {
+  return adminFetch<TenantUser>(`/admin/tenants/${tenantId}/users`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function adminDeleteTenantUser(tenantId: number, userId: number): Promise<void> {
+  await adminFetch(`/admin/tenants/${tenantId}/users/${userId}`, { method: 'DELETE' });
+}
+
+// ─── Admin Billing ──────────────────────────────────────────────
+
+export async function adminGetPlans(): Promise<{ plans: BillingPlan[] }> {
+  return adminFetch<{ plans: BillingPlan[] }>('/admin/billing/plans');
+}
+
+export async function adminCreateSubscription(tenantId: number, planTier: string): Promise<void> {
+  await adminFetch('/admin/billing/subscriptions', {
+    method: 'POST',
+    body: JSON.stringify({ tenant_id: tenantId, plan_tier: planTier }),
+  });
+}
+
+export async function adminChangePlan(tenantId: number, planTier: string): Promise<void> {
+  await adminFetch('/admin/billing/subscriptions/change-plan', {
+    method: 'PUT',
+    body: JSON.stringify({ tenant_id: tenantId, plan_tier: planTier }),
+  });
+}
+
+export async function adminSuspendSubscription(tenantId: number): Promise<void> {
+  await adminFetch(`/admin/billing/subscriptions/${tenantId}/suspend`, { method: 'POST' });
+}
+
+export async function adminReactivateSubscription(tenantId: number): Promise<void> {
+  await adminFetch(`/admin/billing/subscriptions/${tenantId}/reactivate`, { method: 'POST' });
+}
+
+export async function adminGetTenantUsage(tenantId: number): Promise<BillingUsage> {
+  return adminFetch<BillingUsage>(`/admin/billing/usage/${tenantId}`);
+}
+
+export async function adminGenerateInvoice(tenantId: number): Promise<void> {
+  await adminFetch('/admin/billing/invoices/generate', {
+    method: 'POST',
+    body: JSON.stringify({ tenant_id: tenantId }),
+  });
+}
+
+export async function adminGetInvoices(tenantId?: number): Promise<{ invoices: BillingInvoice[] }> {
+  return adminFetch<{ invoices: BillingInvoice[] }>(`/admin/billing/invoices${qs({ tenant_id: tenantId })}`);
+}
+
+export async function adminMarkInvoicePaid(id: number): Promise<void> {
+  await adminFetch(`/admin/billing/invoices/${id}/mark-paid`, { method: 'PATCH' });
+}
+
+export async function adminMarkInvoiceUnpaid(id: number): Promise<void> {
+  await adminFetch(`/admin/billing/invoices/${id}/mark-unpaid`, { method: 'PATCH' });
+}
+
+export async function adminGetRevenue(): Promise<AdminRevenueStats> {
+  return adminFetch<AdminRevenueStats>('/admin/billing/revenue');
+}
+
+// ─── Admin Notifications ────────────────────────────────────────
+
+export async function adminSendProductNotification(productId: number, message: string): Promise<void> {
+  await adminFetch('/admin/notifications/product', {
+    method: 'POST',
+    body: JSON.stringify({ product_id: productId, message }),
+  });
 }

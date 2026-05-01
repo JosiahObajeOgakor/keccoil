@@ -1,52 +1,61 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageCircle, X, Send, Bot, User, Minus, Phone, CreditCard, Loader2, CheckCircle2, XCircle, Download } from 'lucide-react';
-import { sendChatMessage, getMyPayments } from '@/lib/api';
+import {
+  MessageCircle, X, Send, Bot, User, Minus, Phone, CreditCard,
+  Loader2, CheckCircle2, XCircle, Download, LogOut, Clock, AlertTriangle,
+} from 'lucide-react';
 import { formatPrice } from '@/lib/constants';
+import { useChatStore } from '@/lib/stores/chatStore';
 import type { ChatResponse, Payment } from '@/lib/types';
 
-type PaymentPollStatus = 'polling' | 'success' | 'failed' | 'timeout';
-
-interface ChatMessage {
-  id: string;
-  sender: 'user' | 'ai';
-  text: string;
-  timestamp: string;
-  meta?: ChatResponse;
-  paymentStatus?: PaymentPollStatus;
-  paymentData?: Payment;
-}
-
-const GREETING: ChatMessage = {
-  id: 'greeting',
-  sender: 'ai',
-  text: "Hello! 👋 Welcome to KeceoOil. I can help you browse our red palm oil products, place an order, or answer any questions.\n\nPlease enter your phone number to get started.",
-  timestamp: new Date().toISOString(),
-};
-
 export function ChatWidget() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
+  // ── Store selectors ──
+  const isOpen = useChatStore((s) => s.isOpen);
+  const isMinimized = useChatStore((s) => s.isMinimized);
+  const messages = useChatStore((s) => s.messages);
+  const isTyping = useChatStore((s) => s.isTyping);
+  const phone = useChatStore((s) => s.phone);
+  const sessionActive = useChatStore((s) => s.sessionActive);
+  const ttl = useChatStore((s) => s.ttl);
+  const token = useChatStore((s) => s.token);
+
+  const setOpen = useChatStore((s) => s.setOpen);
+  const setMinimized = useChatStore((s) => s.setMinimized);
+  const startSession = useChatStore((s) => s.startSession);
+  const sendMessage = useChatStore((s) => s.sendMessage);
+  const endSessionAction = useChatStore((s) => s.endSession);
+  const startPaymentPolling = useChatStore((s) => s.startPaymentPolling);
+
+  // ── Local state (UI-only) ──
   const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [phone, setPhone] = useState('');
   const [phoneInput, setPhoneInput] = useState('');
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Cleanup polling on unmount
+  // ── Auto-scroll ──
   useEffect(() => {
-    return () => {
-      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-    };
-  }, []);
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isTyping]);
 
-  const updateMessage = useCallback((msgId: string, updates: Partial<ChatMessage>) => {
-    setMessages((prev) => prev.map((m) => (m.id === msgId ? { ...m, ...updates } : m)));
-  }, []);
+  // ── Focus input ──
+  useEffect(() => {
+    if (isOpen && !isMinimized && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen, isMinimized]);
+
+  // ── Helpers ──
+  const formatTtl = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const ttlColor = ttl <= 60 ? 'text-red-300' : ttl <= 120 ? 'text-amber-300' : 'text-white/70';
 
   const openReceipt = useCallback((payment: Payment, order?: ChatResponse['order']) => {
     const w = window.open('', '_blank', 'width=420,height=600');
@@ -71,7 +80,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;p
 @media print{.print-btn{display:none}}
 </style></head><body>
 <div class="header">
-<h1>🛢️ KeceoOil</h1>
+<h1>🛢️ Kecc Oil</h1>
 <p>Premium Red Palm Oil</p>
 <p style="margin-top:4px">Payment Receipt</p>
 </div>
@@ -86,82 +95,13 @@ ${payment.status === 'SUCCESS' ? '✅ Payment Successful' : payment.status === '
 ${order ? `<div class="row"><span class="label">Order</span><span class="value">#${order.id}</span></div>
 <div class="row total"><span class="label">Total</span><span class="value">${formatPrice(order.total_amount)}</span></div>` : ''}
 <div class="footer">
-<p>KeceoOil — keceoil.com</p>
+<p>Kecc Oil — keceoil.com</p>
 <p style="margin-top:4px">Thank you for your purchase!</p>
 </div>
 <button class="print-btn" onclick="window.print()">🖨️ Print Receipt</button>
 </body></html>`);
     w.document.close();
   }, []);
-
-  const startPaymentPolling = useCallback(
-    (reference: string, msgId: string, order?: ChatResponse['order']) => {
-      if (!phone) return;
-      let attempts = 0;
-      const maxAttempts = 60; // 5 minutes at 5s intervals
-
-      // Add polling message
-      const pollMsgId = `pay-poll-${Date.now()}`;
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: pollMsgId,
-          sender: 'ai',
-          text: 'Verifying your payment...',
-          timestamp: new Date().toISOString(),
-          paymentStatus: 'polling',
-        },
-      ]);
-
-      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-
-      pollTimerRef.current = setInterval(async () => {
-        attempts++;
-        try {
-          const data = await getMyPayments(phone, 1, 20);
-          const found = data.payments?.find((p) => p.reference === reference);
-          if (found && found.status === 'SUCCESS') {
-            clearInterval(pollTimerRef.current!);
-            pollTimerRef.current = null;
-            updateMessage(pollMsgId, {
-              text: `✅ Payment successful!\n\nRef: ${found.reference}\nAmount: ${formatPrice(found.amount)}`,
-              paymentStatus: 'success',
-              paymentData: found,
-              meta: order ? { order } as unknown as ChatResponse : undefined,
-            });
-            // Remove the Pay Now button from original message
-            updateMessage(msgId, {
-              meta: undefined,
-            });
-          } else if (found && found.status === 'FAILED') {
-            clearInterval(pollTimerRef.current!);
-            pollTimerRef.current = null;
-            updateMessage(pollMsgId, {
-              text: '❌ Payment failed. Please try again or contact support.',
-              paymentStatus: 'failed',
-            });
-          } else if (attempts >= maxAttempts) {
-            clearInterval(pollTimerRef.current!);
-            pollTimerRef.current = null;
-            updateMessage(pollMsgId, {
-              text: '⏳ Payment verification timed out. If you completed the payment, it will be confirmed shortly. Please check back later.',
-              paymentStatus: 'timeout',
-            });
-          }
-        } catch {
-          if (attempts >= maxAttempts) {
-            clearInterval(pollTimerRef.current!);
-            pollTimerRef.current = null;
-            updateMessage(pollMsgId, {
-              text: '⏳ Could not verify payment right now. If you completed the payment, it will be confirmed shortly.',
-              paymentStatus: 'timeout',
-            });
-          }
-        }
-      }, 5000);
-    },
-    [phone, updateMessage]
-  );
 
   const handlePayNowClick = useCallback(
     (url: string, reference: string, msgId: string, order?: ChatResponse['order']) => {
@@ -171,141 +111,24 @@ ${order ? `<div class="row"><span class="label">Order</span><span class="value">
     [startPaymentPolling]
   );
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, isTyping]);
-
-  useEffect(() => {
-    if (isOpen && !isMinimized && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isOpen, isMinimized]);
-
-  const stripPaystackUrl = (text: string) =>
-    text
-      .split('\n')
-      .filter((line) => !line.includes('checkout.paystack.com') && !line.includes('Pay here:'))
-      .join('\n')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
-
-  const handlePhoneSubmit = (e: React.FormEvent) => {
+  const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleaned = phoneInput.trim().replace(/\s+/g, '');
     if (cleaned.length < 10) return;
-    setPhone(cleaned);
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `ai-phone`,
-        sender: 'ai',
-        text: `Great! Connected as ${cleaned}.\n\nHow can I help you today? You can ask about:\n• 🛢️ Product sizes and prices\n• 📦 Placing an order\n• 🚚 Delivery information\n• 💰 Bulk/wholesale pricing`,
-        timestamp: new Date().toISOString(),
-      },
-    ]);
+    setPhoneInput('');
+    await startSession(cleaned);
   };
 
   const handleSend = async () => {
     const text = input.trim();
-    if (!text || isTyping || !phone) return;
-
-    const userMsg: ChatMessage = {
-      id: `u-${Date.now()}`,
-      sender: 'user',
-      text,
-      timestamp: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, userMsg]);
+    if (!text || isTyping || !sessionActive) return;
     setInput('');
-    setIsTyping(true);
-
-    try {
-      const data = await sendChatMessage(phone, text);
-      const reply = data.ai_response.reply;
-
-      // Strip Paystack URL lines — the Pay Now button handles it
-      let fullReply = stripPaystackUrl(reply);
-      if (data.ai_response.order_id) {
-        fullReply += `\n\n📋 Order #${data.ai_response.order_id} created!`;
-      }
-      if (data.ai_response.delivery_info?.city) {
-        const d = data.ai_response.delivery_info;
-        fullReply += `\n\n📍 Delivery: ${d.address}, ${d.area}, ${d.city}`;
-      }
-      if (data.ai_response.products && data.ai_response.products.length > 0) {
-        const items = data.ai_response.products
-          .map((p) => `${p.quantity}× ${p.name}`)
-          .join(', ');
-        if (!fullReply.includes(items)) {
-          fullReply += `\n\n🛒 ${items}`;
-        }
-      }
-
-      const aiMsg: ChatMessage = {
-        id: `ai-${Date.now()}`,
-        sender: 'ai',
-        text: fullReply,
-        timestamp: new Date().toISOString(),
-        meta: data,
-      };
-      setMessages((prev) => [...prev, aiMsg]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `ai-err-${Date.now()}`,
-          sender: 'ai',
-          text: "Sorry, I'm having trouble connecting. Please try again or reach us on WhatsApp.",
-          timestamp: new Date().toISOString(),
-        },
-      ]);
-    } finally {
-      setIsTyping(false);
-    }
+    await sendMessage(text);
   };
 
   const handleQuickAction = (label: string) => {
-    setInput(label);
-    // Trigger send on next tick after state updates
-    setTimeout(() => {
-      const userMsg: ChatMessage = {
-        id: `u-${Date.now()}`,
-        sender: 'user',
-        text: label,
-        timestamp: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, userMsg]);
-      setInput('');
-      setIsTyping(true);
-
-      sendChatMessage(phone, label)
-        .then((data) => {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `ai-${Date.now()}`,
-              sender: 'ai',
-              text: stripPaystackUrl(data.ai_response.reply),
-              timestamp: new Date().toISOString(),
-              meta: data,
-            },
-          ]);
-        })
-        .catch(() => {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `ai-err-${Date.now()}`,
-              sender: 'ai',
-              text: "Sorry, I'm having trouble connecting. Please try again.",
-              timestamp: new Date().toISOString(),
-            },
-          ]);
-        })
-        .finally(() => setIsTyping(false));
-    }, 50);
+    if (isTyping || !sessionActive) return;
+    sendMessage(label);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -315,11 +138,16 @@ ${order ? `<div class="row"><span class="label">Order</span><span class="value">
     }
   };
 
-  // Floating button when closed
+  const handleEndChat = async () => {
+    setShowLogoutConfirm(false);
+    await endSessionAction('logout');
+  };
+
+  // ── Floating button when closed ──
   if (!isOpen) {
     return (
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => setOpen(true)}
         className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3.5 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-all hover:scale-105 active:scale-95"
         aria-label="Open chat"
       >
@@ -329,18 +157,21 @@ ${order ? `<div class="row"><span class="label">Order</span><span class="value">
     );
   }
 
-  // Minimized bar
+  // ── Minimized bar ──
   if (isMinimized) {
     return (
       <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-primary text-primary-foreground rounded-full shadow-lg px-4 py-3 cursor-pointer hover:bg-primary/90 transition-colors">
-        <button onClick={() => setIsMinimized(false)} className="flex items-center gap-2">
+        <button onClick={() => setMinimized(false)} className="flex items-center gap-2">
           <MessageCircle className="w-4 h-4" />
-          <span className="text-sm font-medium">KeceoOil Chat</span>
+          <span className="text-sm font-medium">Kecc Oil Chat</span>
+          {sessionActive && ttl > 0 && (
+            <span className={`text-[10px] font-mono ${ttlColor}`}>{formatTtl(ttl)}</span>
+          )}
         </button>
         <button
           onClick={() => {
-            setIsOpen(false);
-            setIsMinimized(false);
+            setOpen(false);
+            setMinimized(false);
           }}
           className="ml-1 p-0.5 rounded-full hover:bg-white/20 transition-colors"
           aria-label="Close chat"
@@ -351,7 +182,7 @@ ${order ? `<div class="row"><span class="label">Order</span><span class="value">
     );
   }
 
-  // Full chat window
+  // ── Full chat window ──
   return (
     <div
       className="fixed bottom-6 right-6 z-50 w-[360px] max-w-[calc(100vw-2rem)] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
@@ -364,22 +195,40 @@ ${order ? `<div class="row"><span class="label">Order</span><span class="value">
             <span className="text-sm">🛢️</span>
           </div>
           <div>
-            <h3 className="font-semibold text-sm">KeceoOil</h3>
-            <p className="text-xs opacity-80">
-              {isTyping ? 'Typing...' : phone ? 'Online — AI Assistant' : 'Online — Enter your phone'}
-            </p>
+            <h3 className="font-semibold text-sm">Kecc Oil</h3>
+            <div className="flex items-center gap-2">
+              <p className="text-xs opacity-80">
+                {isTyping ? 'Typing...' : sessionActive ? 'Online — AI Assistant' : 'Online — Enter your phone'}
+              </p>
+              {sessionActive && ttl > 0 && (
+                <span className={`flex items-center gap-0.5 text-[10px] font-mono ${ttlColor}`}>
+                  <Clock className="w-2.5 h-2.5" />
+                  {formatTtl(ttl)}
+                </span>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-1">
+          {sessionActive && (
+            <button
+              onClick={() => setShowLogoutConfirm(true)}
+              className="p-1.5 rounded-lg hover:bg-white/20 transition-colors"
+              aria-label="End chat"
+              title="End chat session"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
           <button
-            onClick={() => setIsMinimized(true)}
+            onClick={() => setMinimized(true)}
             className="p-1.5 rounded-lg hover:bg-white/20 transition-colors"
             aria-label="Minimize"
           >
             <Minus className="w-4 h-4" />
           </button>
           <button
-            onClick={() => setIsOpen(false)}
+            onClick={() => setOpen(false)}
             className="p-1.5 rounded-lg hover:bg-white/20 transition-colors"
             aria-label="Close"
           >
@@ -388,9 +237,46 @@ ${order ? `<div class="row"><span class="label">Order</span><span class="value">
         </div>
       </div>
 
+      {/* Logout confirmation banner */}
+      {showLogoutConfirm && (
+        <div className="px-4 py-3 bg-destructive/10 border-b border-destructive/20 flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-xs font-medium text-destructive">End chat session?</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              This will clear your session and entire chat history.
+            </p>
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={handleEndChat}
+                className="px-3 py-1 text-xs font-medium bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 transition-colors"
+              >
+                End Chat
+              </button>
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="px-3 py-1 text-xs font-medium bg-secondary text-foreground rounded-md hover:bg-secondary/80 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-secondary/10">
         {messages.map((msg) => {
+          if (msg.sender === 'system') {
+            return (
+              <div key={msg.id} className="flex justify-center">
+                <div className="max-w-[90%] px-3 py-2 rounded-lg bg-muted/50 border border-border">
+                  <p className="text-[11px] text-muted-foreground text-center whitespace-pre-wrap">{msg.text}</p>
+                </div>
+              </div>
+            );
+          }
+
           const isUser = msg.sender === 'user';
           return (
             <div key={msg.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -501,8 +387,8 @@ ${order ? `<div class="row"><span class="label">Order</span><span class="value">
         )}
       </div>
 
-      {/* Phone collection or Quick actions */}
-      {!phone ? (
+      {/* Phone collection or chat input */}
+      {!sessionActive ? (
         <form
           onSubmit={handlePhoneSubmit}
           className="px-3 py-3 border-t border-border bg-card"
@@ -530,8 +416,8 @@ ${order ? `<div class="row"><span class="label">Order</span><span class="value">
         </form>
       ) : (
         <>
-          {/* Quick Actions — show only right after phone confirmation */}
-          {messages.length <= 2 && (
+          {/* Quick Actions — show only right after session start */}
+          {messages.length <= 3 && (
             <div className="px-4 py-2 border-t border-border flex gap-2 overflow-x-auto">
               {['View Prices', 'Place Order', 'Delivery Info', 'Bulk Pricing'].map(
                 (label) => (

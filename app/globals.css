@@ -3,25 +3,91 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Base font sizing — minimum 14px body, 12px small */
+/* ===== Responsive Font Sizing =====
+   Mobile (<640px): 12px base
+   Tablet (640–1024px): 14px base
+   Desktop (>1024px): 16px base
+   All rem values scale proportionally.
+   Respects user's browser zoom & font-size for accessibility.
+*/
 html {
-  font-size: 16px;
+  font-size: 12px; /* Mobile default */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+@media (min-width: 640px) {
+  html {
+    font-size: 14px; /* Tablet */
+  }
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 16px; /* Desktop */
+  }
+}
+
+/* Visually impaired: respect user preference for larger text */
+@media (prefers-contrast: more) {
+  html {
+    font-size: 14px;
+  }
+  @media (min-width: 640px) {
+    html {
+      font-size: 16px;
+    }
+  }
+  @media (min-width: 1024px) {
+    html {
+      font-size: 18px;
+    }
+  }
 }
 
 body {
-  font-size: 0.875rem; /* 14px base */
+  font-size: 1rem; /* Inherits from html: 12/14/16px per breakpoint */
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography scale — all rem-based so they scale with html root */
+.text-xs {
+  font-size: 0.75rem !important;   /* 9/10.5/12px */
+  line-height: 1.5;
+}
+.text-sm {
+  font-size: 0.875rem !important;  /* 10.5/12.25/14px */
+  line-height: 1.5;
+}
+.text-base {
+  font-size: 1rem !important;      /* 12/14/16px */
   line-height: 1.6;
 }
 
-/* Ensure small text never goes below 12px */
-.text-xs {
-  font-size: 0.75rem !important; /* 12px */
+/* Accessibility: ensure minimum tap target size on touch devices */
+@media (pointer: coarse) {
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
-.text-sm {
-  font-size: 0.875rem !important; /* 14px */
+
+/* Accessibility: reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
-.text-base {
-  font-size: 1rem !important; /* 16px */
+
+/* Focus visible for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 
 :root {

@@ -1,12 +1,23 @@
+export type DeliveryMethod = 'pickup' | 'dispatch';
+
 export function generateWhatsAppLink(
   phoneNumber: string,
   productName: string,
   productId: string,
-  quantity: number = 1
+  quantity: number = 1,
+  deliveryMethod?: DeliveryMethod
 ): string {
-  const message = encodeURIComponent(
-    `Hello, I&apos;m interested in ordering:\n\n📦 ${productName}\n💬 Quantity: ${quantity}\n\nPlease provide more details and pricing information.`
-  );
+  let msg = `Hello Kecc Oil, I'm interested in ordering:\n\n📦 ${productName}\n💬 Quantity: ${quantity}`;
+
+  if (deliveryMethod === 'pickup') {
+    msg += `\n🏪 Delivery: Pickup from shop`;
+  } else if (deliveryMethod === 'dispatch') {
+    msg += `\n🚚 Delivery: Dispatch to my address`;
+  }
+
+  msg += `\n\nPlease provide more details and pricing information please.`;
+
+  const message = encodeURIComponent(msg);
   
   // Remove spaces and special characters from phone number, keep only digits
   const cleanPhone = phoneNumber.replace(/\D/g, '');

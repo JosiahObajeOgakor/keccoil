@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Product } from '@/lib/types';
-import { formatPrice } from '@/lib/constants';
+import { formatPrice, WHATSAPP_BUSINESS_NUMBER } from '@/lib/constants';
 import { generateWhatsAppLink } from '@/lib/utils/whatsapp';
 import { OrderModal } from '@/components/OrderModal';
 
@@ -16,7 +16,7 @@ interface ProductCardProps {
 export function ProductCard({ product, showPrice = true }: ProductCardProps) {
   const [showModal, setShowModal] = useState(false);
   const whatsappLink = generateWhatsAppLink(
-    '234 812 345 6789',
+    WHATSAPP_BUSINESS_NUMBER,
     product.name,
     String(product.id)
   );
