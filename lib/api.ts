@@ -441,21 +441,15 @@ export async function sendChatMessage(
 ): Promise<ChatResponse> {
   const key =
     getAdminKey() || process.env.NEXT_PUBLIC_CHAT_API_KEY || '';
-  const { start, end } = useLoaderStore.getState();
-  start();
-  try {
-    const res = await fetch(`${API_BASE_URL}/test/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Admin-Key': key,
-      },
-      body: JSON.stringify({ phone, message }),
-    });
-    return await handleResponse(res);
-  } finally {
-    end();
-  }
+  const res = await fetch(`${API_BASE_URL}/test/chat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Admin-Key': key,
+    },
+    body: JSON.stringify({ phone, message }),
+  });
+  return await handleResponse(res);
 }
 
 // ─── Chat Sessions ──────────────────────────────────────────────
@@ -473,21 +467,15 @@ export async function sendTokenChatMessage(
   token: string,
   message: string
 ): Promise<ChatResponse> {
-  const { start, end } = useLoaderStore.getState();
-  start();
-  try {
-    const res = await fetch(`${API_BASE_URL}/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, message }),
-    });
-    if (res.status === 401) {
-      throw new ApiError('Session expired', 401);
-    }
-    return await handleResponse<ChatResponse>(res);
-  } finally {
-    end();
+  const res = await fetch(`${API_BASE_URL}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, message }),
+  });
+  if (res.status === 401) {
+    throw new ApiError('Session expired', 401);
   }
+  return await handleResponse<ChatResponse>(res);
 }
 
 export async function checkChatSession(

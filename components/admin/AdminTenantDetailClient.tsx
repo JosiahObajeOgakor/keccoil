@@ -13,10 +13,7 @@ import type { Tenant, TenantUser, BillingUsage, CreateTenantUserRequest } from '
 import { toast } from 'sonner';
 import { ArrowLeft, Users, Trash2, Plus } from 'lucide-react';
 
-export function generateStaticParams() {
-  return [];
-}
-export default function AdminTenantDetailPage() {
+export default function AdminTenantDetailClient() {
   const router = useRouter();
   const params = useParams();
   const tenantId = Number(params.id);
