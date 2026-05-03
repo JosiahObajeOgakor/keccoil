@@ -6,12 +6,11 @@ import * as Yup from 'yup';
 import { getTenantSettings, updateTenantSettings } from '@/lib/api';
 import type { TenantSettings } from '@/lib/types';
 import { toast } from 'sonner';
-import { Settings, Save } from 'lucide-react';
+import { Settings, Save, Lock } from 'lucide-react';
 
 const settingsSchema = Yup.object({
   business_name: Yup.string().trim().min(2, 'Min 2 characters').required('Required'),
   phone: Yup.string().trim(),
-  ai_system_prompt: Yup.string().trim().max(2000, 'Max 2000 characters'),
 });
 
 export default function SettingsPage() {
@@ -22,7 +21,6 @@ export default function SettingsPage() {
     initialValues: {
       business_name: '',
       phone: '',
-      ai_system_prompt: '',
     },
     validationSchema: settingsSchema,
     enableReinitialize: true,
@@ -31,7 +29,6 @@ export default function SettingsPage() {
         await updateTenantSettings({
           business_name: values.business_name.trim(),
           phone: values.phone.trim(),
-          ai_system_prompt: values.ai_system_prompt.trim(),
         });
         toast.success('Settings saved successfully');
       } catch (err) {
@@ -49,7 +46,6 @@ export default function SettingsPage() {
         formik.setValues({
           business_name: data.business_name || '',
           phone: data.phone || '',
-          ai_system_prompt: data.ai_system_prompt || '',
         });
       })
       .catch(() => {})
@@ -101,25 +97,24 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* AI Configuration */}
-        <div className="bg-card border border-border rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-foreground mb-4">AI Configuration</h2>
+        {/* AI Configuration (read-only) */}
+        <div className="bg-card border border-border rounded-xl p-6 opacity-90">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-foreground">AI Configuration</h2>
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground bg-secondary px-2.5 py-1 rounded-full">
+              <Lock className="w-3 h-3" />
+              Managed by platform
+            </span>
+          </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
               System Prompt
-              <span className="font-normal text-muted-foreground ml-2">(Optional)</span>
             </label>
-            <textarea
-              {...formik.getFieldProps('ai_system_prompt')}
-              rows={6}
-              placeholder="Customize how the AI assistant responds to your customers..."
-              className="w-full px-4 py-2.5 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-            />
-            {formik.touched.ai_system_prompt && formik.errors.ai_system_prompt && (
-              <p className="mt-1 text-xs text-destructive">{formik.errors.ai_system_prompt}</p>
-            )}
+            <div className="w-full px-4 py-2.5 text-sm border border-border rounded-lg bg-muted/50 min-h-[150px] whitespace-pre-wrap text-muted-foreground">
+              {initialData?.ai_system_prompt || <span className="italic">No system prompt configured</span>}
+            </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              This prompt guides the AI when responding to your customers via WhatsApp.
+              This prompt guides the AI when responding to your customers via WhatsApp. Contact support to request changes.
             </p>
           </div>
         </div>
