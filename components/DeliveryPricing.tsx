@@ -173,34 +173,6 @@ export function DeliveryPricing() {
         </div>
       </div>
 
-      {/* Show Products Button */}
-      {/* {pricing.products && pricing.products.length > 0 && (
-        <div className="mt-12">
-          <button
-            onClick={() => setShowProducts(!showProducts)}
-            className="group flex items-center gap-3 px-6 py-3.5 bg-card border border-border rounded-xl hover:border-primary/50 hover:shadow-md transition-all"
-          >
-            <Package className="w-5 h-5 text-primary" />
-            <span className="font-semibold text-foreground">
-              {showProducts ? 'Hide Products' : 'View Available Products'}
-            </span>
-            <ChevronRight
-              className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${
-                showProducts ? 'rotate-90' : 'group-hover:translate-x-0.5'
-              }`}
-            />
-          </button>
-
-          {showProducts && (
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in-0 slide-in-from-top-4 duration-300">
-              {pricing.products.map((product: Product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
-        </div>
-      )} */}
-
       {/* Fallback: Link to products page if no products in pricing response */}
       {(!pricing.products || pricing.products.length === 0) && (
         <div className="mt-12 flex justify-center">

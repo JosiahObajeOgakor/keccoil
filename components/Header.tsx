@@ -27,7 +27,7 @@ export function Header() {
               width={56}
               height={56}
               priority
-              className="h-12 sm:h-14 w-auto object-contain"
+              className="h-14 sm:h-14 w-auto object-contain"
             />
           </Link>
 

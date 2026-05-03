@@ -78,11 +78,11 @@ export function OrderDetails({ orderId }: { orderId: number }) {
         {/* Customer */}
         <div>
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Customer</h3>
-          <p className="text-sm text-foreground">{order.user?.name || 'Unknown'}</p>
-          <p className="text-xs text-muted-foreground">{order.user?.phone}</p>
-          {order.delivery_area && (
+          <p className="text-sm text-foreground">{order.user ? order.user.name : 'Unknown'}</p>
+          <p className="text-xs text-muted-foreground">{order.user ? order.user.phone : '—'}</p>
+          {order.delivery_area ? (
             <p className="text-xs text-muted-foreground mt-1">{order.delivery_area}, {order.delivery_city}</p>
-          )}
+          ) : null}
         </div>
 
         {/* Items */}
@@ -91,19 +91,19 @@ export function OrderDetails({ orderId }: { orderId: number }) {
           <div className="space-y-2">
             {order.items?.map((item, i) => (
               <div key={i} className="flex justify-between text-sm">
-                <span className="text-foreground">{item.product_name} × {item.quantity}</span>
+                <span className="text-foreground">{item.product_name || 'Product'} × {item.quantity}</span>
                 <span className="text-muted-foreground">₦{(item.unit_price * item.quantity).toLocaleString()}</span>
               </div>
-            ))}
+            )) ?? <p className="text-sm text-muted-foreground">No items</p>}
           </div>
           <div className="mt-3 pt-3 border-t border-border flex justify-between font-semibold text-sm">
             <span>Total</span>
-            <span>₦{order.total_amount.toLocaleString()}</span>
+            <span>₦{order.total_amount ? order.total_amount.toLocaleString() : '0'}</span>
           </div>
         </div>
 
         {/* Status Actions */}
-        {nextStatuses.length > 0 && (
+        {nextStatuses.length > 0 ? (
           <div>
             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Update Status</h3>
             <div className="flex flex-wrap gap-2">
@@ -119,7 +119,7 @@ export function OrderDetails({ orderId }: { orderId: number }) {
               ))}
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

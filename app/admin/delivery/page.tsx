@@ -127,10 +127,10 @@ export default function DeliveryPage() {
                             <span className="font-medium text-sm text-foreground">#{order.id}</span>
                             <StatusBadge type="order" status={order.status} />
                           </div>
-                          <p className="text-sm text-foreground">{order.user?.name || 'Unknown'}</p>
+                          <p className="text-sm text-foreground">{order.user ? order.user.name : 'Unknown'}</p>
                           <p className="text-xs text-muted-foreground">{order.delivery_area}</p>
                           <div className="text-xs text-muted-foreground mt-1">
-                            {order.items?.map((item) => `${item.quantity}× ${item.product_name}`).join(', ')}
+                            {order.items ? order.items.map((item) => `${item.quantity}× ${item.product_name}`).join(', ') : ''}
                           </div>
                         </div>
                         <div className="flex-shrink-0 flex flex-col gap-1.5">

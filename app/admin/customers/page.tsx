@@ -119,11 +119,11 @@ export default function CustomersPage() {
                       <StatusBadge type="order" status={order.status} />
                     </div>
                     <div className="text-sm text-foreground space-y-1">
-                      {order.items?.map((item, i) => (
+                      {order.items ? order.items.map((item, i) => (
                         <p key={i}>
                           {item.quantity}× {item.product_name}
                         </p>
-                      ))}
+                      )) : null}
                     </div>
                     <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">

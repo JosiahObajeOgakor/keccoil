@@ -86,9 +86,9 @@ export function OrderList({ orders, selectedOrderId, onSelectOrder, isLoading }:
                   <span className="font-medium text-sm text-foreground">#{order.id}</span>
                   <StatusBadge type="order" status={order.status} />
                 </div>
-                <p className="text-sm text-foreground truncate">{order.user?.name || 'Unknown'}</p>
+                <p className="text-sm text-foreground truncate">{order.user ? order.user.name : 'Unknown'}</p>
                 <div className="flex items-center justify-between mt-1">
-                  <p className="text-xs text-muted-foreground">{order.user?.phone}</p>
+                  <p className="text-xs text-muted-foreground">{order.user ? order.user.phone : ''}</p>
                   <p className="text-sm font-medium text-foreground">
                     {formatPrice(order.total_amount)}
                   </p>
