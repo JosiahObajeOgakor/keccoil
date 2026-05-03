@@ -65,28 +65,28 @@ export default function FinancePage() {
               <DollarSign className="w-5 h-5 text-green-600" />
               <span className="text-sm text-muted-foreground">Total Revenue</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{formatPrice(summary.total_revenue)}</p>
+            <p className="text-2xl font-bold text-foreground">{formatPrice(summary?.total_received)}</p>
           </div>
           <div className="bg-card border border-border rounded-xl p-5">
             <div className="flex items-center gap-3 mb-2">
               <Clock className="w-5 h-5 text-amber-600" />
               <span className="text-sm text-muted-foreground">Pending</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{formatPrice(summary.pending_amount)}</p>
+            <p className="text-2xl font-bold text-foreground">{formatPrice(summary?.pending_amount)}</p>
           </div>
           <div className="bg-card border border-border rounded-xl p-5">
             <div className="flex items-center gap-3 mb-2">
               <CheckCircle className="w-5 h-5 text-green-600" />
               <span className="text-sm text-muted-foreground">Completed</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{summary.completed_count}</p>
+            <p className="text-2xl font-bold text-foreground">{summary?.payment_count}</p>
           </div>
           <div className="bg-card border border-border rounded-xl p-5">
             <div className="flex items-center gap-3 mb-2">
               <Clock className="w-5 h-5 text-amber-600" />
               <span className="text-sm text-muted-foreground">Pending Count</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{summary.pending_count}</p>
+            <p className="text-2xl font-bold text-foreground">{summary?.pending_count}</p>
           </div>
         </div>
       )}

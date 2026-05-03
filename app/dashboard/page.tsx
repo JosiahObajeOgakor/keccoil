@@ -28,7 +28,7 @@ export default function DashboardPage() {
     },
     {
       label: 'Revenue',
-      value: stats ? formatPrice(stats.revenue_kobo) : '₦0.00',
+      value: stats ? formatPrice(stats.total_revenue) : '₦0.00',
       icon: DollarSign,
       color: 'text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400',
     },

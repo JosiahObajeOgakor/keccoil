@@ -413,9 +413,9 @@ export interface CustomerAnalytics {
 }
 
 export interface FinanceSummary {
-  total_revenue: number;
+  total_received: number;
   pending_amount: number;
-  completed_count: number;
+  payment_count: number;
   pending_count: number;
 }
 
