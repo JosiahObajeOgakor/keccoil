@@ -64,7 +64,7 @@ export default function AnalyticsPage() {
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-foreground">{formatPrice(data.revenue_kobo)}</p>
+          <p className="text-2xl font-bold text-foreground">{formatPrice(data.total_revenue)}</p>
         </div>
         <div className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">

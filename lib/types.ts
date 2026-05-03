@@ -398,7 +398,7 @@ export interface PaginatedTenantCustomers {
 
 export interface TenantAnalyticsOverview {
   total_orders: number;
-  revenue_kobo: number;
+  total_revenue: number;
   avg_order_value: number;
   pending_orders: number;
   active_products: number;
