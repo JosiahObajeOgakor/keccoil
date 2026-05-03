@@ -8,7 +8,7 @@ interface TenantProductsState {
   error: string | null;
 
   fetchProducts: () => Promise<void>;
-  addProduct: (data: Omit<TenantProduct, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  addProduct: (data: Omit<TenantProduct, 'id' | 'created_at' | 'updated_at' | 'tenant_id'>) => Promise<void>;
   updateProduct: (id: number, data: Partial<TenantProduct>) => Promise<void>;
   deleteProduct: (id: number) => Promise<void>;
 }

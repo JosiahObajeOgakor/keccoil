@@ -178,7 +178,7 @@ export interface ChatSessionStatus {
 // ─── Tenant / Multi-Tenant SaaS ─────────────────────────────────
 
 export type PlanTier = 'starter' | 'growth' | 'business';
-export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'cancelled' | 'suspended';
+export type SubscriptionStatus = 'active' | 'trial' | 'past_due' | 'cancelled' | 'suspended';
 export type TenantStatus = 'active' | 'suspended' | 'pending';
 export type TenantUserRole = 'owner' | 'admin' | 'staff';
 export type ApiKeyMode = 'sandbox' | 'production';
@@ -205,9 +205,24 @@ export interface TenantUser {
 }
 
 export interface Subscription {
-  id: number;
-  tenant_id: number;
-  plan_tier: PlanTier;
+  id: string;
+  tenant_id: string;
+  plan_id: string;
+  plan: {
+    id: string;
+    created_at: string;
+    updated_at: string;
+    name: string;
+    tier: PlanTier;
+    monthly_price_kobo: number;
+    conversation_limit: number;
+    transaction_fee_bps: number;
+    overage_per_msg_kobo: number;
+    max_whatsapp_numbers: number;
+    voice_enabled: boolean;
+    analytics_enabled: boolean;
+    active: boolean;
+  };
   status: SubscriptionStatus;
   trial_ends_at: string | null;
   current_period_start: string;
@@ -278,14 +293,36 @@ export interface BillingPlan {
 
 export interface BillingUsage {
   usage: {
+    id: string;
+    created_at: string;
+    updated_at: string;
+    tenant_id: string;
+    period_start: string;
+    period_end: string;
     conversations: number;
     ai_responses: number;
+    messages_in: number;
+    messages_out: number;
+    orders_created: number;
+    gmv_kobo: number;
+    transaction_fee_kobo: number;
+    overage_conversations: number;
+    overage_charge_kobo: number;
   };
   plan: {
+    id: string;
+    created_at: string;
+    updated_at: string;
     name: string;
     tier: PlanTier;
+    monthly_price_kobo: number;
     conversation_limit: number;
-    overage_cost_kobo: number;
+    transaction_fee_bps: number;
+    overage_per_msg_kobo: number;
+    max_whatsapp_numbers: number;
+    voice_enabled: boolean;
+    analytics_enabled: boolean;
+    active: boolean;
   };
 }
 
@@ -306,10 +343,11 @@ export interface TenantProduct {
   id: number;
   name: string;
   description: string;
-  price_kobo: number;
-  category: string;
+  price: number; // kobo
+  currency: string;
+  available: boolean;
   image_url: string;
-  in_stock: boolean;
+  tenant_id: string;
   created_at: string;
   updated_at: string;
 }

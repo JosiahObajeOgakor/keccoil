@@ -10,11 +10,11 @@ import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
 
 const productSchema = Yup.object({
   name: Yup.string().trim().min(2, 'Min 2 characters').max(100, 'Max 100 characters').required('Required'),
-  price_kobo: Yup.number().typeError('Must be a number').positive('Must be positive').integer('Must be whole number').required('Required'),
+  price: Yup.number().typeError('Must be a number').positive('Must be positive').integer('Must be whole number').required('Required'),
   description: Yup.string().trim().max(500, 'Max 500 characters'),
-  category: Yup.string().trim().max(50, 'Max 50 characters'),
   image_url: Yup.string().trim().url('Must be a valid URL').matches(/^https:\/\//, 'Must use HTTPS'),
-  in_stock: Yup.boolean(),
+  available: Yup.boolean(),
+  currency: Yup.string().default('NGN'),
 });
 
 interface FormState {
@@ -33,11 +33,11 @@ export default function TenantProductsPage() {
   const formik = useFormik({
     initialValues: {
       name: '',
-      price_kobo: 0,
+      price: 0,
       description: '',
-      category: '',
       image_url: '',
-      in_stock: true,
+      available: true,
+      currency: 'NGN',
     },
     validationSchema: productSchema,
     validateOnBlur: true,
@@ -47,15 +47,15 @@ export default function TenantProductsPage() {
       try {
         const sanitized = {
           name: values.name.trim(),
-          price_kobo: values.price_kobo,
+          price: values.price,
           description: values.description?.trim() || '',
-          category: values.category?.trim() || '',
           image_url: values.image_url?.trim() || '',
-          in_stock: values.in_stock,
+          available: values.available,
+          currency: values.currency,
         };
 
         if (form.mode === 'add') {
-          await addProduct(sanitized as Omit<TenantProduct, 'id' | 'created_at' | 'updated_at'>);
+          await addProduct(sanitized as Omit<TenantProduct, 'id' | 'created_at' | 'updated_at' | 'tenant_id'>);
         } else if (form.editingId) {
           await updateProduct(form.editingId, sanitized);
         }
@@ -79,7 +79,7 @@ export default function TenantProductsPage() {
 
   const handleAddNew = () => {
     formik.resetForm();
-    formik.setValues({ name: '', price_kobo: 0, description: '', category: '', image_url: '', in_stock: true });
+    formik.setValues({ name: '', price: 0, description: '', image_url: '', available: true, currency: 'NGN' });
     setSubmitError(null);
     setForm({ isOpen: true, mode: 'add' });
   };
@@ -88,11 +88,11 @@ export default function TenantProductsPage() {
     formik.resetForm();
     formik.setValues({
       name: product.name,
-      price_kobo: product.price_kobo,
+      price: product.price,
       description: product.description || '',
-      category: product.category || '',
       image_url: product.image_url || '',
-      in_stock: product.in_stock,
+      available: product.available,
+      currency: product.currency || 'NGN',
     });
     setSubmitError(null);
     setForm({ isOpen: true, mode: 'edit', editingId: product.id });
@@ -147,7 +147,6 @@ export default function TenantProductsPage() {
               <thead className="border-b border-border bg-secondary/30">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Product</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Category</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Price</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
                   <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
@@ -169,15 +168,14 @@ export default function TenantProductsPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">{product.category || '—'}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-foreground">{formatPrice(product.price_kobo)}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-foreground">{formatPrice(product.price)}</td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                        product.in_stock
+                        product.available
                           ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                           : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                       }`}>
-                        {product.in_stock ? 'In Stock' : 'Out of Stock'}
+                        {product.available ? 'Available' : 'Unavailable'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -231,12 +229,8 @@ export default function TenantProductsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">Price (kobo) *</label>
-                <input type="number" {...formik.getFieldProps('price_kobo')} className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                {formik.touched.price_kobo && formik.errors.price_kobo && <p className="mt-1 text-xs text-destructive">{formik.errors.price_kobo}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">Category</label>
-                <input {...formik.getFieldProps('category')} className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                <input type="number" {...formik.getFieldProps('price')} className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                {formik.touched.price && formik.errors.price && <p className="mt-1 text-xs text-destructive">{formik.errors.price}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">Description</label>
@@ -249,8 +243,8 @@ export default function TenantProductsPage() {
                 {formik.touched.image_url && formik.errors.image_url && <p className="mt-1 text-xs text-destructive">{formik.errors.image_url}</p>}
               </div>
               <div className="flex items-center gap-2">
-                <input type="checkbox" id="in_stock" checked={formik.values.in_stock} onChange={(e) => formik.setFieldValue('in_stock', e.target.checked)} className="rounded border-border" />
-                <label htmlFor="in_stock" className="text-sm text-foreground">In Stock</label>
+                <input type="checkbox" id="available" checked={formik.values.available} onChange={(e) => formik.setFieldValue('available', e.target.checked)} className="rounded border-border" />
+                <label htmlFor="available" className="text-sm text-foreground">Available</label>
               </div>
 
               {submitError && (

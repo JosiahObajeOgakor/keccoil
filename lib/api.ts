@@ -467,7 +467,7 @@ export async function sendTokenChatMessage(
   token: string,
   message: string
 ): Promise<ChatResponse> {
-  const res = await fetch(`${API_BASE_URL}/chat`, {
+  const res = await fetch(`${API_BASE_URL}/chat/message`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token, message }),
@@ -485,8 +485,8 @@ export async function checkChatSession(
 }
 
 export async function endChatSession(token: string): Promise<void> {
-  await publicFetch('/chat/session', {
-    method: 'DELETE',
+  await publicFetch('/chat/end', {
+    method: 'POST',
     body: JSON.stringify({ token }),
   });
 }
@@ -549,12 +549,11 @@ export async function changePassword(currentPassword: string, newPassword: strin
 // ─── Tenant Products ────────────────────────────────────────────
 
 export async function getTenantProducts(): Promise<TenantProduct[]> {
-  const data = await tenantFetch<{ products: TenantProduct[] }>('/tenant/products');
-  return data.products ?? [];
+  return tenantFetch<TenantProduct[]>('/tenant/products');
 }
 
 export async function createTenantProduct(
-  product: Omit<TenantProduct, 'id' | 'created_at' | 'updated_at'>
+  product: Omit<TenantProduct, 'id' | 'created_at' | 'updated_at' | 'tenant_id'>
 ): Promise<TenantProduct> {
   return tenantFetch<TenantProduct>('/tenant/products', {
     method: 'POST',
@@ -639,7 +638,7 @@ export async function getTenantFinancePayments(params?: {
   page?: number;
   limit?: number;
 }): Promise<PaginatedFinancePayments> {
-  return tenantFetch<PaginatedFinancePayments>(`/tenant/finance/payments${qs(params ?? {})}`);
+  return tenantFetch<PaginatedFinancePayments>(`/tenant/payments${qs(params ?? {})}`);
 }
 
 export async function exportTenantFinanceCSV(): Promise<Response> {
@@ -685,22 +684,22 @@ export async function getTenantApiKeys(): Promise<ApiKeyInfo> {
   return tenantFetch<ApiKeyInfo>('/tenant/api-keys');
 }
 
-// ─── Billing ────────────────────────────────────────────────────
+// ─── Tenant Billing ─────────────────────────────────────────────
 
 export async function getBillingUsage(): Promise<BillingUsage> {
-  return tenantFetch<BillingUsage>('/billing/usage');
+  return tenantFetch<BillingUsage>('/tenant/billing/usage');
 }
 
 export async function getBillingSubscription(): Promise<Subscription> {
-  return tenantFetch<Subscription>('/billing/subscription');
+  return tenantFetch<Subscription>('/tenant/billing/subscription');
 }
 
 export async function getBillingInvoices(): Promise<{ invoices: BillingInvoice[] }> {
-  return tenantFetch<{ invoices: BillingInvoice[] }>('/billing/invoices');
+  return tenantFetch<{ invoices: BillingInvoice[] }>('/tenant/billing/invoices');
 }
 
 export async function payBillingInvoice(id: number): Promise<{ payment_url: string }> {
-  return tenantFetch<{ payment_url: string }>(`/billing/invoices/${id}/pay`);
+  return tenantFetch<{ payment_url: string }>(`/tenant/billing/invoices/${id}/pay`, { method: 'POST' });
 }
 
 // ─── Admin Tenant Management ────────────────────────────────────
@@ -760,26 +759,26 @@ export async function adminCreateSubscription(tenantId: number, planTier: string
 }
 
 export async function adminChangePlan(tenantId: number, planTier: string): Promise<void> {
-  await adminFetch('/admin/billing/subscriptions/change-plan', {
-    method: 'PUT',
+  await adminFetch('/admin/billing/change-plan', {
+    method: 'POST',
     body: JSON.stringify({ tenant_id: tenantId, plan_tier: planTier }),
   });
 }
 
 export async function adminSuspendSubscription(tenantId: number): Promise<void> {
-  await adminFetch(`/admin/billing/subscriptions/${tenantId}/suspend`, { method: 'POST' });
+  await adminFetch(`/admin/billing/tenants/${tenantId}/suspend`, { method: 'POST' });
 }
 
 export async function adminReactivateSubscription(tenantId: number): Promise<void> {
-  await adminFetch(`/admin/billing/subscriptions/${tenantId}/reactivate`, { method: 'POST' });
+  await adminFetch(`/admin/billing/tenants/${tenantId}/reactivate`, { method: 'POST' });
 }
 
 export async function adminGetTenantUsage(tenantId: number): Promise<BillingUsage> {
-  return adminFetch<BillingUsage>(`/admin/billing/usage/${tenantId}`);
+  return adminFetch<BillingUsage>(`/admin/billing/tenants/${tenantId}/usage`);
 }
 
 export async function adminGenerateInvoice(tenantId: number): Promise<void> {
-  await adminFetch('/admin/billing/invoices/generate', {
+  await adminFetch('/admin/billing/invoices', {
     method: 'POST',
     body: JSON.stringify({ tenant_id: tenantId }),
   });
@@ -790,11 +789,11 @@ export async function adminGetInvoices(tenantId?: number): Promise<{ invoices: B
 }
 
 export async function adminMarkInvoicePaid(id: number): Promise<void> {
-  await adminFetch(`/admin/billing/invoices/${id}/mark-paid`, { method: 'PATCH' });
+  await adminFetch(`/admin/billing/invoices/${id}/mark-paid`, { method: 'POST' });
 }
 
 export async function adminMarkInvoiceUnpaid(id: number): Promise<void> {
-  await adminFetch(`/admin/billing/invoices/${id}/mark-unpaid`, { method: 'PATCH' });
+  await adminFetch(`/admin/billing/invoices/${id}/mark-unpaid`, { method: 'POST' });
 }
 
 export async function adminGetRevenue(): Promise<AdminRevenueStats> {

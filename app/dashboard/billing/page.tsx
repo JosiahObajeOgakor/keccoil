@@ -68,11 +68,11 @@ export default function BillingPage() {
               <h2 className="text-lg font-semibold text-foreground">Current Plan</h2>
             </div>
             <div className="flex items-center gap-3 mb-3">
-              <span className="text-2xl font-bold text-foreground capitalize">{subscription.plan_tier}</span>
+              <span className="text-2xl font-bold text-foreground capitalize">{subscription.plan.tier}</span>
               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                 subscription.status === 'active'
                   ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                  : subscription.status === 'trialing'
+                  : subscription.status === 'trial'
                   ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                   : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
               }`}>
@@ -116,7 +116,7 @@ export default function BillingPage() {
             </div>
             <div className="text-sm text-muted-foreground">
               <p>Plan: <span className="text-foreground font-medium capitalize">{usage.plan.name}</span></p>
-              <p>Overage: <span className="text-foreground font-medium">{formatPrice(usage.plan.overage_cost_kobo)}/msg</span></p>
+              <p>Overage: <span className="text-foreground font-medium">{formatPrice(usage.plan.overage_per_msg_kobo)}/msg</span></p>
             </div>
           </div>
         )}
