@@ -2,58 +2,64 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { registerTenant } from '@/lib/api';
 import { useAuthStore } from '@/lib/stores/authStore';
 import Link from 'next/link';
 
-const registerSchema = Yup.object({
-  name: Yup.string().trim().min(2, 'Name must be at least 2 characters').required('Name is required'),
-  email: Yup.string().trim().email('Invalid email address').required('Email is required'),
-  password: Yup.string().min(8, 'Password must be at least 8 characters').required('Password is required'),
-  business_name: Yup.string().trim().min(2, 'Business name must be at least 2 characters').required('Business name is required'),
-  business_phone: Yup.string().trim(),
+const registerSchema = z.object({
+  name: z.string().trim().min(2, 'Name must be at least 2 characters'),
+  email: z.string().trim().email('Invalid email address').min(1, 'Email is required'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  business_name: z.string().trim().min(2, 'Business name must be at least 2 characters'),
+  business_phone: z.string().trim().optional(),
 });
+
+type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
   const [error, setError] = useState('');
 
-  const formik = useFormik({
-    initialValues: {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterForm>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
       name: '',
       email: '',
       password: '',
       business_name: '',
       business_phone: '',
     },
-    validationSchema: registerSchema,
-    onSubmit: async (values, { setSubmitting }) => {
-      setError('');
-      try {
-        const res = await registerTenant({
-          name: values.name.trim(),
-          email: values.email.trim().toLowerCase(),
-          password: values.password,
-          business_name: values.business_name.trim(),
-          business_phone: values.business_phone?.trim() || undefined,
-        });
-        setAuth({
-          user: res.user,
-          tenant: res.tenant,
-          accessToken: res.access_token,
-          refreshToken: res.refresh_token,
-        });
-        router.push('/dashboard');
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
-      } finally {
-        setSubmitting(false);
-      }
-    },
   });
+
+  const onSubmit = async (values: RegisterForm) => {
+    setError('');
+    try {
+      const res = await registerTenant({
+        name: values.name.trim(),
+        email: values.email.trim().toLowerCase(),
+        password: values.password,
+        business_name: values.business_name.trim(),
+        business_phone: values.business_phone?.trim() || undefined,
+      });
+      setAuth({
+        user: res.user,
+        tenant: res.tenant,
+        accessToken: res.access_token,
+        refreshToken: res.refresh_token,
+      });
+      router.push('/dashboard');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-linear-to-br from-primary/5 to-accent/5 flex items-center justify-center px-4 py-12">
@@ -74,7 +80,7 @@ export default function RegisterPage() {
 
         {/* Form */}
         <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
-          <form onSubmit={formik.handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Name */}
             <div>
               <label htmlFor="name" className="block text-sm font-semibold text-foreground mb-1.5">
@@ -83,12 +89,12 @@ export default function RegisterPage() {
               <input
                 id="name"
                 type="text"
-                {...formik.getFieldProps('name')}
+                {...register('name')}
                 placeholder="John Doe"
                 className="w-full px-4 py-3 border border-border rounded-lg bg-secondary/30 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
               />
-              {formik.touched.name && formik.errors.name && (
-                <p className="mt-1 text-xs text-destructive">{formik.errors.name}</p>
+              {errors.name && (
+                <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>
               )}
             </div>
 
@@ -100,12 +106,12 @@ export default function RegisterPage() {
               <input
                 id="email"
                 type="email"
-                {...formik.getFieldProps('email')}
+                {...register('email')}
                 placeholder="you@company.com"
                 className="w-full px-4 py-3 border border-border rounded-lg bg-secondary/30 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
               />
-              {formik.touched.email && formik.errors.email && (
-                <p className="mt-1 text-xs text-destructive">{formik.errors.email}</p>
+              {errors.email && (
+                <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>
               )}
             </div>
 
@@ -117,12 +123,12 @@ export default function RegisterPage() {
               <input
                 id="password"
                 type="password"
-                {...formik.getFieldProps('password')}
+                {...register('password')}
                 placeholder="Minimum 8 characters"
                 className="w-full px-4 py-3 border border-border rounded-lg bg-secondary/30 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
               />
-              {formik.touched.password && formik.errors.password && (
-                <p className="mt-1 text-xs text-destructive">{formik.errors.password}</p>
+              {errors.password && (
+                <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>
               )}
             </div>
 
@@ -134,12 +140,12 @@ export default function RegisterPage() {
               <input
                 id="business_name"
                 type="text"
-                {...formik.getFieldProps('business_name')}
+                {...register('business_name')}
                 placeholder="Your Company Ltd"
                 className="w-full px-4 py-3 border border-border rounded-lg bg-secondary/30 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
               />
-              {formik.touched.business_name && formik.errors.business_name && (
-                <p className="mt-1 text-xs text-destructive">{formik.errors.business_name}</p>
+              {errors.business_name && (
+                <p className="mt-1 text-xs text-destructive">{errors.business_name.message}</p>
               )}
             </div>
 
@@ -151,7 +157,7 @@ export default function RegisterPage() {
               <input
                 id="business_phone"
                 type="tel"
-                {...formik.getFieldProps('business_phone')}
+                {...register('business_phone')}
                 placeholder="+234 800 000 0000"
                 className="w-full px-4 py-3 border border-border rounded-lg bg-secondary/30 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
               />
@@ -167,10 +173,10 @@ export default function RegisterPage() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={formik.isSubmitting}
+              disabled={isSubmitting}
               className="w-full py-3 px-4 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 duration-100"
             >
-              {formik.isSubmitting ? 'Creating account...' : 'Start Free Trial'}
+              {isSubmitting ? 'Creating account...' : 'Start Free Trial'}
             </button>
           </form>
 

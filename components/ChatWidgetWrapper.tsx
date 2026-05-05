@@ -1,7 +1,12 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
-import { ChatWidget } from '@/components/ChatWidget';
+
+const ChatWidget = dynamic(
+  () => import('@/components/ChatWidget').then((m) => ({ default: m.ChatWidget })),
+  { ssr: false }
+);
 
 export function ChatWidgetWrapper() {
   const pathname = usePathname();

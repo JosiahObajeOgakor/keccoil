@@ -9,6 +9,16 @@ import { formatPrice } from '@/lib/constants';
 import { useChatStore } from '@/lib/stores/chatStore';
 import type { ChatResponse, Payment } from '@/lib/types';
 
+/** Escape HTML entities to prevent XSS in document.write contexts */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export function ChatWidget() {
   // ── Store selectors ──
   const isOpen = useChatStore((s) => s.isOpen);
@@ -41,6 +51,19 @@ export function ChatWidget() {
     }
   }, [messages, isTyping]);
 
+  // ── Lock background scroll when chat is open on mobile ──
+  useEffect(() => {
+    if (isOpen && !isMinimized) {
+      const isMobile = window.innerWidth < 640;
+      if (isMobile) {
+        document.body.style.overflow = 'hidden';
+      }
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen, isMinimized]);
+
   // ── Focus input ──
   useEffect(() => {
     if (isOpen && !isMinimized && inputRef.current) {
@@ -60,7 +83,16 @@ export function ChatWidget() {
   const openReceipt = useCallback((payment: Payment, order?: ChatResponse['order']) => {
     const w = window.open('', '_blank', 'width=420,height=600');
     if (!w) return;
-    w.document.write(`<!DOCTYPE html><html><head><title>Receipt #${payment.reference}</title>
+    const safeRef = escapeHtml(String(payment.reference));
+    const safeAmount = escapeHtml(formatPrice(payment.amount));
+    const safeCurrency = escapeHtml(String(payment.currency || 'NGN'));
+    const safeProvider = escapeHtml(String(payment.provider || 'Paystack'));
+    const safeDate = escapeHtml(new Date(payment.completed_at || payment.created_at).toLocaleString());
+    const safeStatus = payment.status === 'SUCCESS' ? 'success' : payment.status === 'FAILED' ? 'failed' : 'pending';
+    const statusLabel = payment.status === 'SUCCESS' ? '✅ Payment Successful' : payment.status === 'FAILED' ? '❌ Payment Failed' : '⏳ Payment Pending';
+    const orderHtml = order ? `<div class="row"><span class="label">Order</span><span class="value">#${escapeHtml(String(order.id))}</span></div>
+<div class="row total"><span class="label">Total</span><span class="value">${escapeHtml(formatPrice(order.total_amount))}</span></div>` : '';
+    w.document.write(`<!DOCTYPE html><html><head><title>Receipt #${safeRef}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:24px;color:#1a1a1a;max-width:400px;margin:0 auto}
@@ -84,16 +116,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;p
 <p>Premium Red Palm Oil</p>
 <p style="margin-top:4px">Payment Receipt</p>
 </div>
-<div class="badge ${payment.status === 'SUCCESS' ? 'success' : payment.status === 'FAILED' ? 'failed' : 'pending'}" style="text-align:center;width:100%;margin-bottom:16px">
-${payment.status === 'SUCCESS' ? '✅ Payment Successful' : payment.status === 'FAILED' ? '❌ Payment Failed' : '⏳ Payment Pending'}
+<div class="badge ${safeStatus}" style="text-align:center;width:100%;margin-bottom:16px">
+${statusLabel}
 </div>
-<div class="row"><span class="label">Reference</span><span class="value" style="font-family:monospace;font-size:11px">${payment.reference}</span></div>
-<div class="row"><span class="label">Amount</span><span class="value">${formatPrice(payment.amount)}</span></div>
-<div class="row"><span class="label">Currency</span><span class="value">${payment.currency || 'NGN'}</span></div>
-<div class="row"><span class="label">Provider</span><span class="value" style="text-transform:capitalize">${payment.provider || 'Paystack'}</span></div>
-<div class="row"><span class="label">Date</span><span class="value">${new Date(payment.completed_at || payment.created_at).toLocaleString()}</span></div>
-${order ? `<div class="row"><span class="label">Order</span><span class="value">#${order.id}</span></div>
-<div class="row total"><span class="label">Total</span><span class="value">${formatPrice(order.total_amount)}</span></div>` : ''}
+<div class="row"><span class="label">Reference</span><span class="value" style="font-family:monospace;font-size:11px">${safeRef}</span></div>
+<div class="row"><span class="label">Amount</span><span class="value">${safeAmount}</span></div>
+<div class="row"><span class="label">Currency</span><span class="value">${safeCurrency}</span></div>
+<div class="row"><span class="label">Provider</span><span class="value" style="text-transform:capitalize">${safeProvider}</span></div>
+<div class="row"><span class="label">Date</span><span class="value">${safeDate}</span></div>
+${orderHtml}
 <div class="footer">
 <p>Kecc Oil — keceoil.com</p>
 <p style="margin-top:4px">Thank you for your purchase!</p>
@@ -148,7 +179,7 @@ ${order ? `<div class="row"><span class="label">Order</span><span class="value">
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3.5 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-all hover:scale-105 active:scale-95"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex items-center gap-2 px-5 py-3.5 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-all hover:scale-105 active:scale-95"
         aria-label="Open chat"
       >
         <MessageCircle className="w-5 h-5" />
@@ -160,7 +191,7 @@ ${order ? `<div class="row"><span class="label">Order</span><span class="value">
   // ── Minimized bar ──
   if (isMinimized) {
     return (
-      <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-primary text-primary-foreground rounded-full shadow-lg px-4 py-3 cursor-pointer hover:bg-primary/90 transition-colors">
+      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex items-center gap-2 bg-primary text-primary-foreground rounded-full shadow-lg px-4 py-3 cursor-pointer hover:bg-primary/90 transition-colors">
         <button onClick={() => setMinimized(false)} className="flex items-center gap-2">
           <MessageCircle className="w-4 h-4" />
           <span className="text-sm font-medium">Kecc Oil Chat</span>
@@ -185,8 +216,7 @@ ${order ? `<div class="row"><span class="label">Order</span><span class="value">
   // ── Full chat window ──
   return (
     <div
-      className="fixed bottom-6 right-6 z-50 w-[360px] max-w-[calc(100vw-2rem)] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
-      style={{ height: 'min(520px, calc(100vh - 6rem))' }}
+      className="fixed inset-0 sm:inset-auto sm:bottom-6 sm:right-6 z-50 w-full h-[100dvh] sm:w-[380px] sm:h-[min(520px,calc(100vh-6rem))] sm:max-w-[calc(100vw-2rem)] bg-card border-0 sm:border sm:border-border sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">

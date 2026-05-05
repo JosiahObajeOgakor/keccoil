@@ -25,12 +25,14 @@ export function ProductCard({ product, showPrice = true }: ProductCardProps) {
     <div className="group rounded-xl overflow-hidden bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10">
       {/* Image Container */}
       <Link href={`/products/${product.id}`}>
-        <div className="relative overflow-hidden bg-secondary h-56 sm:h-64">
+        <div className="relative overflow-hidden bg-secondary h-48 sm:h-56 md:h-64">
           {product.image_url ? (
             <Image
               src={product.image_url}
               alt={product.name}
               fill
+              loading="lazy"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               className="object-cover group-hover:scale-110 transition-transform duration-300"
             />
           ) : (

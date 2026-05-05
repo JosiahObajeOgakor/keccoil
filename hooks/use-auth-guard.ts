@@ -15,7 +15,7 @@ export function useAuthGuard() {
 
     const tryHydrate = async () => {
       if (typeof window === 'undefined') return;
-      const refreshToken = localStorage.getItem('keceoil_refresh_token');
+      const refreshToken = sessionStorage.getItem('keceoil_refresh_token');
       if (!refreshToken) {
         setHydrated();
         return;
@@ -24,7 +24,7 @@ export function useAuthGuard() {
       try {
         const data = await refreshAccessToken(refreshToken);
         setAccessToken(data.access_token);
-        localStorage.setItem('keceoil_refresh_token', data.refresh_token);
+        sessionStorage.setItem('keceoil_refresh_token', data.refresh_token);
       } catch {
         logout();
       }

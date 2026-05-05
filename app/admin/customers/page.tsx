@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAdminAuthenticated } from '@/lib/utils/auth';
 import { useCustomersStore } from '@/lib/stores/customersStore';
@@ -12,6 +12,8 @@ export default function CustomersPage() {
   const router = useRouter();
   const { user, userOrders, isLoading, error, lookupByPhone, clearUser } = useCustomersStore();
   const [phoneInput, setPhoneInput] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSearchRef = useRef<string>('');
 
   useEffect(() => {
     if (!isAdminAuthenticated()) {
@@ -19,9 +21,21 @@ export default function CustomersPage() {
     }
   }, [router]);
 
+  const debouncedSearch = useCallback((phone: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      if (phone.trim() && phone.trim() !== lastSearchRef.current) {
+        lastSearchRef.current = phone.trim();
+        lookupByPhone(phone.trim());
+      }
+    }, 400);
+  }, [lookupByPhone]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (phoneInput.trim()) {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (phoneInput.trim() && phoneInput.trim() !== lastSearchRef.current) {
+      lastSearchRef.current = phoneInput.trim();
       lookupByPhone(phoneInput.trim());
     }
   };
@@ -36,7 +50,7 @@ export default function CustomersPage() {
       </div>
 
       {/* Search */}
-      <form onSubmit={handleSearch} className="flex gap-3 mb-8 max-w-md">
+      <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3 mb-8 max-w-lg">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
@@ -57,7 +71,7 @@ export default function CustomersPage() {
       </form>
 
       {error && (
-        <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 mb-6 max-w-md">
+        <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 mb-6 max-w-lg">
           <p className="text-sm text-destructive font-medium">{error}</p>
         </div>
       )}
@@ -65,24 +79,24 @@ export default function CustomersPage() {
       {user && (
         <div className="space-y-6">
           {/* Customer Info Card */}
-          <div className="bg-card border border-border rounded-xl p-6 max-w-2xl">
+          <div className="bg-card border border-border rounded-xl p-4 sm:p-6 max-w-3xl">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-foreground">{user.name || 'Unknown'}</h2>
+              <h2 className="text-lg font-semibold text-foreground truncate">{user.name || 'Unknown'}</h2>
               <button
                 onClick={clearUser}
-                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground shrink-0"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Clear
               </button>
             </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-muted-foreground" />
-                <span>{user.phone}</span>
+                <Phone className="w-4 h-4 text-muted-foreground shrink-0" />
+                <span className="truncate">{user.phone}</span>
               </div>
-              {user.email && <div className="text-muted-foreground">{user.email}</div>}
-              {user.city && <div className="text-muted-foreground">{user.city}, {user.area}</div>}
+              {user.email && <div className="text-muted-foreground truncate">{user.email}</div>}
+              {user.city && <div className="text-muted-foreground truncate">{user.city}, {user.area}</div>}
               {user.fraud_score !== undefined && (
                 <div>
                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -108,7 +122,7 @@ export default function CustomersPage() {
             {userOrders.length === 0 ? (
               <p className="text-sm text-muted-foreground">No orders found</p>
             ) : (
-              <div className="space-y-3 max-w-2xl">
+              <div className="space-y-3 max-w-3xl">
                 {userOrders.map((order) => (
                   <div
                     key={order.id}
@@ -143,7 +157,7 @@ export default function CustomersPage() {
       )}
 
       {!user && !error && !isLoading && (
-        <div className="bg-card border border-border rounded-xl p-12 text-center max-w-2xl">
+        <div className="bg-card border border-border rounded-xl p-8 sm:p-12 text-center max-w-3xl">
           <p className="text-muted-foreground">Enter a phone number to look up a customer</p>
         </div>
       )}

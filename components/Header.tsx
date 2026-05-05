@@ -21,34 +21,36 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
-            <Image
-              src="https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1776681497/download_5_qdevvi.webp"
-              alt="Kecc Oil"
-              width={56}
-              height={56}
-              priority
-              className="h-14 sm:h-14 w-auto object-contain"
-            />
+            <div className="bg-white rounded-lg p-1 shadow-sm">
+              <Image
+                src="https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1776681497/download_5_qdevvi.webp"
+                alt="Kecc Oil"
+                width={48}
+                height={48}
+                priority
+                className="h-10 sm:h-11 w-auto object-contain rounded-md"
+              />
+            </div>
           </Link>
 
           {/* Navigation */}
-          <nav className="flex items-center gap-6">
+          <nav className="flex items-center gap-5 sm:gap-8">
             <Link
               href="/"
-              className={`text-sm font-medium transition-colors ${
+              className={`text-base font-semibold transition-colors ${
                 pathname === '/'
                   ? 'text-primary'
-                  : 'text-neutral-400 hover:text-white'
+                  : 'text-neutral-300 hover:text-white'
               }`}
             >
               Home
             </Link>
             <Link
               href="/products"
-              className={`text-sm font-medium transition-colors ${
+              className={`text-base font-semibold transition-colors ${
                 pathname === '/products'
                   ? 'text-primary'
-                  : 'text-neutral-400 hover:text-white'
+                  : 'text-neutral-300 hover:text-white'
               }`}
             >
               Products

@@ -45,7 +45,6 @@
     "cmdk": "1.1.1",
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.6.0",
-    "formik": "^2.4.9",
     "input-otp": "1.4.2",
     "lucide-react": "^0.564.0",
     "next": "16.2.0",
@@ -59,7 +58,6 @@
     "sonner": "^1.7.1",
     "tailwind-merge": "^3.3.1",
     "vaul": "^1.1.2",
-    "yup": "^1.7.1",
     "zod": "^3.24.1",
     "zustand": "^5.0.12"
   },

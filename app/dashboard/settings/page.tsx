@@ -1,57 +1,59 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { getTenantSettings, updateTenantSettings } from '@/lib/api';
 import type { TenantSettings } from '@/lib/types';
 import { toast } from 'sonner';
 import { Settings, Save, Lock } from 'lucide-react';
 
-const settingsSchema = Yup.object({
-  business_name: Yup.string().trim().min(2, 'Min 2 characters').required('Required'),
-  phone: Yup.string().trim(),
+const settingsSchema = z.object({
+  business_name: z.string().trim().min(2, 'Min 2 characters'),
+  phone: z.string().trim().optional(),
 });
+
+type SettingsForm = z.infer<typeof settingsSchema>;
 
 export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [initialData, setInitialData] = useState<TenantSettings | null>(null);
 
-  const formik = useFormik({
-    initialValues: {
-      business_name: '',
-      phone: '',
-    },
-    validationSchema: settingsSchema,
-    enableReinitialize: true,
-    onSubmit: async (values, { setSubmitting }) => {
-      try {
-        await updateTenantSettings({
-          business_name: values.business_name.trim(),
-          phone: values.phone.trim(),
-        });
-        toast.success('Settings saved successfully');
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : 'Failed to save settings');
-      } finally {
-        setSubmitting(false);
-      }
-    },
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<SettingsForm>({
+    resolver: zodResolver(settingsSchema),
+    defaultValues: { business_name: '', phone: '' },
   });
+
+  const onSubmit = async (values: SettingsForm) => {
+    try {
+      await updateTenantSettings({
+        business_name: values.business_name.trim(),
+        phone: values.phone?.trim() || '',
+      });
+      toast.success('Settings saved successfully');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save settings');
+    }
+  };
 
   useEffect(() => {
     getTenantSettings()
       .then((data) => {
         setInitialData(data);
-        formik.setValues({
+        reset({
           business_name: data.business_name || '',
           phone: data.phone || '',
         });
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reset]);
 
   if (isLoading) {
     return (
@@ -69,7 +71,7 @@ export default function SettingsPage() {
         <p className="text-muted-foreground text-sm mt-1">Manage your business configuration</p>
       </div>
 
-      <form onSubmit={formik.handleSubmit} className="max-w-2xl space-y-8">
+      <form onSubmit={handleSubmit(onSubmit)} className="max-w-2xl space-y-8">
         {/* Business Info */}
         <div className="bg-card border border-border rounded-xl p-6">
           <div className="flex items-center gap-2 mb-4">
@@ -80,17 +82,17 @@ export default function SettingsPage() {
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Business Name</label>
               <input
-                {...formik.getFieldProps('business_name')}
+                {...register('business_name')}
                 className="w-full px-4 py-2.5 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
-              {formik.touched.business_name && formik.errors.business_name && (
-                <p className="mt-1 text-xs text-destructive">{formik.errors.business_name}</p>
+              {errors.business_name && (
+                <p className="mt-1 text-xs text-destructive">{errors.business_name.message}</p>
               )}
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Phone</label>
               <input
-                {...formik.getFieldProps('phone')}
+                {...register('phone')}
                 className="w-full px-4 py-2.5 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
             </div>
@@ -142,11 +144,11 @@ export default function SettingsPage() {
         {/* Save */}
         <button
           type="submit"
-          disabled={formik.isSubmitting}
+          disabled={isSubmitting}
           className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
         >
           <Save className="w-4 h-4" />
-          {formik.isSubmitting ? 'Saving...' : 'Save Settings'}
+          {isSubmitting ? 'Saving...' : 'Save Settings'}
         </button>
       </form>
     </div>

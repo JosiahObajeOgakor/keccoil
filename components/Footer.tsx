@@ -9,25 +9,25 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-3 mb-4">
               <Image
                 src="https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1776681497/download_5_qdevvi.webp"
                 alt="Kecc Oil"
-                width={32}
-                height={32}
-                className="w-8 h-8 rounded-lg object-cover"
+                width={56}
+                height={56}
+                className="w-14 h-14 rounded-xl object-cover border border-border shadow-sm"
               />
-              <span className="font-semibold text-foreground text-xs">Kecc Oil</span>
+              <span className="font-bold text-foreground text-base">Kecc Oil</span>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-base text-muted-foreground">
               Premium red palm oil. Locally sourced, quality certified, wholesale pricing.
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold text-foreground text-xs mb-4">Shop</h4>
-            <ul className="space-y-2 text-xs text-muted-foreground">
+            <h4 className="font-semibold text-foreground text-sm mb-4">Shop</h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <a href="/" className="hover:text-primary transition-colors">
                   Home
@@ -48,8 +48,8 @@ export function Footer() {
 
           {/* Support */}
           <div>
-            <h4 className="font-semibold text-foreground text-xs mb-4">Contact</h4>
-            <ul className="space-y-2 text-xs text-muted-foreground">
+            <h4 className="font-semibold text-foreground text-sm mb-4">Contact</h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <a href="tel:07035291507" className="hover:text-primary transition-colors">
                   📞 07035291507
@@ -80,15 +80,15 @@ export function Footer() {
 
           {/* Info */}
           <div>
-            <h4 className="font-semibold text-foreground text-xs mb-4">Why Us</h4>
-            <p className="text-xs text-muted-foreground">
+            <h4 className="font-semibold text-foreground text-sm mb-4">Why Us</h4>
+            <p className="text-sm text-muted-foreground">
               Premium quality, competitive prices, fast delivery, and 24/7 support from real people — not bots. Local excellence.
             </p>
           </div>
         </div>
 
         {/* Bottom */}
-        <div className="border-t border-border pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-muted-foreground">
+        <div className="border-t border-border pt-8 flex flex-col sm:flex-row items-center justify-between text-sm text-muted-foreground">
           <p>&copy; 2024 Kecc Oil. All rights reserved. Premium Red Palm Oil.</p>
           <div className="flex gap-6 mt-4 sm:mt-0">
             <a href="/privacy" className="hover:text-primary transition-colors">

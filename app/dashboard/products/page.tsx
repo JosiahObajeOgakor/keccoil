@@ -1,21 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useTenantProductsStore } from '@/lib/stores/tenantProductsStore';
 import { formatPrice } from '@/lib/constants';
 import type { TenantProduct } from '@/lib/types';
 import { Plus, Search, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const productSchema = Yup.object({
-  name: Yup.string().trim().min(2, 'Min 2 characters').max(100, 'Max 100 characters').required('Required'),
-  price: Yup.number().typeError('Must be a number').positive('Must be positive').integer('Must be whole number').required('Required'),
-  description: Yup.string().trim().max(500, 'Max 500 characters'),
-  image_url: Yup.string().trim().url('Must be a valid URL').matches(/^https:\/\//, 'Must use HTTPS'),
-  available: Yup.boolean(),
-  currency: Yup.string().default('NGN'),
+const productSchema = z.object({
+  name: z.string().trim().min(2, 'Min 2 characters').max(100, 'Max 100 characters'),
+  price: z.coerce.number().positive('Must be positive').int('Must be whole number'),
+  description: z.string().trim().max(500, 'Max 500 characters').optional().default(''),
+  image_url: z.string().trim().url('Must be a valid URL').startsWith('https://', 'Must use HTTPS').optional().or(z.literal('')),
+  available: z.boolean().default(true),
+  currency: z.string().default('NGN'),
 });
+
+type ProductForm = z.infer<typeof productSchema>;
 
 interface FormState {
   isOpen: boolean;
@@ -32,44 +35,39 @@ export default function TenantProductsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  const formik = useFormik({
-    initialValues: {
-      name: '',
-      price: 0,
-      description: '',
-      image_url: '',
-      available: true,
-      currency: 'NGN',
-    },
-    validationSchema: productSchema,
-    validateOnBlur: true,
-    validateOnChange: false,
-    onSubmit: async (values, { setSubmitting }) => {
-      setSubmitError(null);
-      try {
-        const sanitized = {
-          name: values.name.trim(),
-          price: values.price,
-          description: values.description?.trim() || '',
-          image_url: values.image_url?.trim() || '',
-          available: values.available,
-          currency: values.currency,
-        };
-
-        if (form.mode === 'add') {
-          await addProduct(sanitized as Omit<TenantProduct, 'id' | 'created_at' | 'updated_at' | 'tenant_id'>);
-        } else if (form.editingId) {
-          await updateProduct(form.editingId, sanitized);
-        }
-        setForm({ isOpen: false, mode: 'add' });
-        formik.resetForm();
-      } catch (err) {
-        setSubmitError(err instanceof Error ? err.message : 'Failed to save product');
-      } finally {
-        setSubmitting(false);
-      }
-    },
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ProductForm>({
+    resolver: zodResolver(productSchema),
+    defaultValues: { name: '', price: 0, description: '', image_url: '', available: true, currency: 'NGN' },
   });
+
+  const onSubmit = async (values: ProductForm) => {
+    setSubmitError(null);
+    try {
+      const sanitized = {
+        name: values.name.trim(),
+        price: values.price,
+        description: values.description?.trim() || '',
+        image_url: values.image_url?.trim() || '',
+        available: values.available,
+        currency: values.currency,
+      };
+
+      if (form.mode === 'add') {
+        await addProduct(sanitized as Omit<TenantProduct, 'id' | 'created_at' | 'updated_at' | 'tenant_id'>);
+      } else if (form.editingId) {
+        await updateProduct(form.editingId, sanitized);
+      }
+      setForm({ isOpen: false, mode: 'add' });
+      reset();
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to save product');
+    }
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -87,15 +85,13 @@ export default function TenantProductsPage() {
   }, [searchQuery]);
 
   const handleAddNew = () => {
-    formik.resetForm();
-    formik.setValues({ name: '', price: 0, description: '', image_url: '', available: true, currency: 'NGN' });
+    reset({ name: '', price: 0, description: '', image_url: '', available: true, currency: 'NGN' });
     setSubmitError(null);
     setForm({ isOpen: true, mode: 'add' });
   };
 
   const handleEdit = (product: TenantProduct) => {
-    formik.resetForm();
-    formik.setValues({
+    reset({
       name: product.name,
       price: product.price,
       description: product.description || '',
@@ -279,29 +275,29 @@ export default function TenantProductsPage() {
             <h3 className="text-lg font-semibold text-foreground mb-4">
               {form.mode === 'add' ? 'Add Product' : 'Edit Product'}
             </h3>
-            <form onSubmit={formik.handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">Name *</label>
-                <input {...formik.getFieldProps('name')} className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                {formik.touched.name && formik.errors.name && <p className="mt-1 text-xs text-destructive">{formik.errors.name}</p>}
+                <input {...register('name')} className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">Price (kobo) *</label>
-                <input type="number" {...formik.getFieldProps('price')} className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                {formik.touched.price && formik.errors.price && <p className="mt-1 text-xs text-destructive">{formik.errors.price}</p>}
+                <input type="number" {...register('price', { valueAsNumber: true })} className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                {errors.price && <p className="mt-1 text-xs text-destructive">{errors.price.message}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">Description</label>
-                <textarea {...formik.getFieldProps('description')} rows={3} className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none" />
-                {formik.touched.description && formik.errors.description && <p className="mt-1 text-xs text-destructive">{formik.errors.description}</p>}
+                <textarea {...register('description')} rows={3} className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none" />
+                {errors.description && <p className="mt-1 text-xs text-destructive">{errors.description.message}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">Image URL</label>
-                <input {...formik.getFieldProps('image_url')} placeholder="https://..." className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                {formik.touched.image_url && formik.errors.image_url && <p className="mt-1 text-xs text-destructive">{formik.errors.image_url}</p>}
+                <input {...register('image_url')} placeholder="https://..." className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                {errors.image_url && <p className="mt-1 text-xs text-destructive">{errors.image_url.message}</p>}
               </div>
               <div className="flex items-center gap-2">
-                <input type="checkbox" id="available" checked={formik.values.available} onChange={(e) => formik.setFieldValue('available', e.target.checked)} className="rounded border-border" />
+                <input type="checkbox" id="available" {...register('available')} className="rounded border-border" />
                 <label htmlFor="available" className="text-sm text-foreground">Available</label>
               </div>
 
@@ -312,11 +308,11 @@ export default function TenantProductsPage() {
               )}
 
               <div className="flex gap-3 justify-end pt-2">
-                <button type="button" onClick={() => { setForm({ isOpen: false, mode: 'add' }); formik.resetForm(); }} className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-secondary transition-colors">
+                <button type="button" onClick={() => { setForm({ isOpen: false, mode: 'add' }); reset(); }} className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-secondary transition-colors">
                   Cancel
                 </button>
-                <button type="submit" disabled={formik.isSubmitting} className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50">
-                  {formik.isSubmitting ? 'Saving...' : form.mode === 'add' ? 'Add Product' : 'Save Changes'}
+                <button type="submit" disabled={isSubmitting} className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50">
+                  {isSubmitting ? 'Saving...' : form.mode === 'add' ? 'Add Product' : 'Save Changes'}
                 </button>
               </div>
             </form>

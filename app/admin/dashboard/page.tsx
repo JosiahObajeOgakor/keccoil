@@ -1,11 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { isAdminAuthenticated } from '@/lib/utils/auth';
 import { getDashboardStats, type DashboardStats } from '@/lib/api';
 import { DashboardCards } from '@/components/admin/DashboardCards';
-import { OrdersChart } from '@/components/admin/OrdersChart';
+
+const OrdersChart = dynamic(
+  () => import('@/components/admin/OrdersChart').then((m) => ({ default: m.OrdersChart })),
+  { ssr: false, loading: () => <div className="h-64 animate-pulse bg-muted rounded-lg" /> }
+);
 
 export default function AdminDashboard() {
   const router = useRouter();

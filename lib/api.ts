@@ -71,10 +71,21 @@ function withLoader<T>(promise: Promise<T>): Promise<T> {
   return promise.finally(end);
 }
 
+/** Create an AbortController with an optional timeout (default 30s) */
+export function createAbortController(timeoutMs = 30000): AbortController {
+  const controller = new AbortController();
+  if (timeoutMs > 0) {
+    setTimeout(() => controller.abort(), timeoutMs);
+  }
+  return controller;
+}
+
 function publicFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const signal = init?.signal ?? createAbortController().signal;
   return withLoader(
     fetch(`${API_BASE_URL}${path}`, {
       ...init,
+      signal,
       headers: { 'Content-Type': 'application/json', ...init?.headers },
     }).then((r) => handleResponse<T>(r))
   );
@@ -83,9 +94,11 @@ function publicFetch<T>(path: string, init?: RequestInit): Promise<T> {
 function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const key = getAdminKey();
   if (!key) throw new ApiError('Not authenticated', 401);
+  const signal = init?.signal ?? createAbortController().signal;
   return withLoader(
     fetch(`${API_BASE_URL}${path}`, {
       ...init,
+      signal,
       headers: {
         'Content-Type': 'application/json',
         'X-Admin-Key': key,
@@ -129,7 +142,7 @@ async function doRefresh(): Promise<string | null> {
     const data: RefreshResponse = await res.json();
     setAccessToken(data.access_token);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('keceoil_refresh_token', data.refresh_token);
+      sessionStorage.setItem('keceoil_refresh_token', data.refresh_token);
     }
     return data.access_token;
   } catch {

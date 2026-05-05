@@ -98,6 +98,7 @@ export function HeroSlider({
                 fill
                 className="object-cover"
                 priority={index === 0}
+                loading={index === 0 ? 'eager' : 'lazy'}
                 sizes="100vw"
               />
             )}
@@ -120,14 +121,14 @@ export function HeroSlider({
                     href={s.ctaLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block px-6 py-2.5 sm:px-8 sm:py-3 bg-accent text-foreground font-semibold rounded-lg hover:bg-accent/90 transition-colors text-sm sm:text-base"
+                    className="inline-block px-8 py-3.5 sm:px-10 sm:py-4 bg-primary text-primary-foreground font-bold rounded-full hover:bg-primary/90 transition-all text-base sm:text-lg shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95"
                   >
                     {s.ctaText}
                   </a>
                 ) : (
                   <Link
                     href={s.ctaLink}
-                    className="inline-block px-6 py-2.5 sm:px-8 sm:py-3 bg-accent text-foreground font-semibold rounded-lg hover:bg-accent/90 transition-colors text-sm sm:text-base"
+                    className="inline-block px-8 py-3.5 sm:px-10 sm:py-4 bg-primary text-primary-foreground font-bold rounded-full hover:bg-primary/90 transition-all text-base sm:text-lg shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95"
                   >
                     {s.ctaText}
                   </Link>

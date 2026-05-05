@@ -15,8 +15,8 @@ const heroSlides: HeroSlide[] = [
     id: '1',
     type: 'video',
     src: 'https://res.cloudinary.com/detpqzhnq/video/upload/q_auto/f_auto/v1776676930/Kecc_Oil_yanrla.mp4',
-    title: '',
-    subtitle: '',
+    title: 'Premium Red Palm Oil in Nigeria',
+    subtitle: 'Food-grade certified. Wholesale from \u20A64,000. Fast delivery nationwide.',
     ctaText: 'Browse Products',
     ctaLink: '/products',
   },
@@ -24,8 +24,8 @@ const heroSlides: HeroSlide[] = [
     id: '2',
     type: 'image',
     src: 'https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1776640671/download_2_a0a1og.png',
-    title: '',
-    subtitle: '',
+    title: 'Buy Red Palm Oil Online',
+    subtitle: '3L to 100L sizes available. Order now for same-day dispatch.',
     ctaText: 'Shop Now',
     ctaLink: '/products',
   },
@@ -33,8 +33,8 @@ const heroSlides: HeroSlide[] = [
     id: '3',
     type: 'image',
     src: 'https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1776640705/download_3_shnwng.png',
-    title: '',
-    subtitle: '',
+    title: 'Wholesale Palm Oil Lagos & Abuja',
+    subtitle: 'Bulk orders at competitive prices. Quality you can trust.',
     ctaText: 'Get a Quote',
     ctaLink: '/products',
   },
@@ -42,8 +42,8 @@ const heroSlides: HeroSlide[] = [
     id: '4',
     type: 'image',
     src: 'https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1776676511/download_3_eqepft.webp',
-    title: '',
-    subtitle: '',
+    title: 'Locally Sourced Palm Oil Nigeria',
+    subtitle: 'Direct from trusted producers. Cold-pressed, food-grade certified.',
     ctaText: 'Learn More',
     ctaLink: '/products',
   },
@@ -82,7 +82,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-12">
             {isLoading
               ? Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="h-80 bg-secondary/30 rounded-xl animate-pulse" />

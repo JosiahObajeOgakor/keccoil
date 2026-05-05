@@ -3,35 +3,24 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { isAdminAuthenticated } from '@/lib/utils/auth';
 import { useAdmin } from '@/lib/contexts/AdminContext';
 import type { Product } from '@/lib/types';
 import { formatPrice } from '@/lib/constants';
 import { Plus, Search, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const productSchema = Yup.object({
-  name: Yup.string()
-    .trim()
-    .min(2, 'Name must be at least 2 characters')
-    .max(100, 'Name must be at most 100 characters')
-    .required('Product name is required'),
-  price: Yup.number()
-    .typeError('Price must be a number')
-    .positive('Price must be greater than 0')
-    .integer('Price must be a whole number (kobo)')
-    .max(100000000, 'Price seems too high')
-    .required('Price is required'),
-  description: Yup.string()
-    .trim()
-    .max(500, 'Description must be at most 500 characters'),
-  image_url: Yup.string()
-    .trim()
-    .url('Must be a valid URL')
-    .matches(/^https:\/\//, 'URL must use HTTPS'),
-  available: Yup.boolean(),
+const productSchema = z.object({
+  name: z.string().trim().min(2, 'Name must be at least 2 characters').max(100, 'Name must be at most 100 characters'),
+  price: z.coerce.number().positive('Price must be greater than 0').int('Price must be a whole number (kobo)').max(100000000, 'Price seems too high'),
+  description: z.string().trim().max(500, 'Description must be at most 500 characters').optional().default(''),
+  image_url: z.string().trim().url('Must be a valid URL').startsWith('https://', 'URL must use HTTPS').optional().or(z.literal('')),
+  available: z.boolean().default(true),
 });
+
+type ProductForm = z.infer<typeof productSchema>;
 
 interface FormState {
   isOpen: boolean;
@@ -50,43 +39,40 @@ export default function ProductsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  const formik = useFormik({
-    initialValues: {
-      name: '',
-      price: 0,
-      description: '',
-      image_url: '',
-      available: true,
-    },
-    validationSchema: productSchema,
-    validateOnBlur: true,
-    validateOnChange: false,
-    onSubmit: async (values, { setSubmitting }) => {
-      setSubmitError(null);
-      try {
-        const sanitized = {
-          name: values.name.trim(),
-          price: values.price,
-          description: values.description?.trim() || '',
-          image_url: values.image_url?.trim() || '',
-          available: values.available,
-          currency: 'NGN',
-        };
-
-        if (form.mode === 'add') {
-          await addProduct(sanitized as Omit<Product, 'id' | 'created_at' | 'updated_at'>);
-        } else if (form.editingId) {
-          await updateProduct(form.editingId, sanitized);
-        }
-        setForm({ isOpen: false, mode: 'add' });
-        formik.resetForm();
-      } catch (err) {
-        setSubmitError(err instanceof Error ? err.message : 'Failed to save product');
-      } finally {
-        setSubmitting(false);
-      }
-    },
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<ProductForm>({
+    resolver: zodResolver(productSchema),
+    defaultValues: { name: '', price: 0, description: '', image_url: '', available: true },
   });
+
+  const onSubmit = async (values: ProductForm) => {
+    setSubmitError(null);
+    try {
+      const sanitized = {
+        name: values.name.trim(),
+        price: values.price,
+        description: values.description?.trim() || '',
+        image_url: values.image_url?.trim() || '',
+        available: values.available,
+        currency: 'NGN',
+      };
+
+      if (form.mode === 'add') {
+        await addProduct(sanitized as Omit<Product, 'id' | 'created_at' | 'updated_at'>);
+      } else if (form.editingId) {
+        await updateProduct(form.editingId, sanitized);
+      }
+      setForm({ isOpen: false, mode: 'add' });
+      reset();
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to save product');
+    }
+  };
 
   useEffect(() => {
     if (!isAdminAuthenticated()) {
@@ -112,15 +98,13 @@ export default function ProductsPage() {
   }, [searchQuery, sortBy]);
 
   const handleAddNew = () => {
-    formik.resetForm();
-    formik.setValues({ name: '', price: 0, description: '', image_url: '', available: true });
+    reset({ name: '', price: 0, description: '', image_url: '', available: true });
     setSubmitError(null);
     setForm({ isOpen: true, mode: 'add' });
   };
 
   const handleEdit = (product: Product) => {
-    formik.resetForm();
-    formik.setValues({
+    reset({
       name: product.name,
       price: product.price,
       description: product.description || '',
@@ -133,7 +117,7 @@ export default function ProductsPage() {
 
   const handleCloseForm = () => {
     setForm({ isOpen: false, mode: 'add' });
-    formik.resetForm();
+    reset();
     setSubmitError(null);
   };
 
@@ -317,24 +301,21 @@ export default function ProductsPage() {
               </div>
             )}
 
-            <form onSubmit={formik.handleSubmit} noValidate>
+            <form onSubmit={handleSubmit(onSubmit)} noValidate>
               <div className="space-y-4 mb-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1.5">Name *</label>
                   <input
                     id="name"
-                    name="name"
                     type="text"
-                    value={formik.values.name}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
+                    {...register('name')}
                     className={`w-full px-3 py-2 text-sm border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${
-                      formik.touched.name && formik.errors.name ? 'border-destructive' : 'border-border'
+                      errors.name ? 'border-destructive' : 'border-border'
                     }`}
                     placeholder="e.g. Red Palm Oil 5L"
                   />
-                  {formik.touched.name && formik.errors.name && (
-                    <p className="mt-1 text-xs text-destructive">{formik.errors.name}</p>
+                  {errors.name && (
+                    <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>
                   )}
                 </div>
 
@@ -342,26 +323,18 @@ export default function ProductsPage() {
                   <label htmlFor="price" className="block text-sm font-medium text-foreground mb-1.5">Price (kobo) *</label>
                   <input
                     id="price"
-                    name="price"
                     type="number"
-                    value={formik.values.price || ''}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
+                    {...register('price', { valueAsNumber: true })}
                     className={`w-full px-3 py-2 text-sm border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${
-                      formik.touched.price && formik.errors.price ? 'border-destructive' : 'border-border'
+                      errors.price ? 'border-destructive' : 'border-border'
                     }`}
                     placeholder="e.g. 500000"
                   />
-                  {formik.touched.price && formik.errors.price ? (
-                    <p className="mt-1 text-xs text-destructive">{formik.errors.price}</p>
+                  {errors.price ? (
+                    <p className="mt-1 text-xs text-destructive">{errors.price.message}</p>
                   ) : (
                     <p className="text-xs text-muted-foreground mt-1">
                       Enter price in kobo (e.g. 500000 = ₦5,000)
-                      {formik.values.price > 0 && (
-                        <span className="ml-1 font-medium text-primary">
-                          = {formatPrice(formik.values.price)}
-                        </span>
-                      )}
                     </p>
                   )}
                 </div>
@@ -370,40 +343,31 @@ export default function ProductsPage() {
                   <label htmlFor="description" className="block text-sm font-medium text-foreground mb-1.5">Description</label>
                   <textarea
                     id="description"
-                    name="description"
-                    value={formik.values.description}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
+                    {...register('description')}
                     rows={3}
                     className={`w-full px-3 py-2 text-sm border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none ${
-                      formik.touched.description && formik.errors.description ? 'border-destructive' : 'border-border'
+                      errors.description ? 'border-destructive' : 'border-border'
                     }`}
                     placeholder="Brief product description..."
                   />
-                  {formik.touched.description && formik.errors.description && (
-                    <p className="mt-1 text-xs text-destructive">{formik.errors.description}</p>
+                  {errors.description && (
+                    <p className="mt-1 text-xs text-destructive">{errors.description.message}</p>
                   )}
-                  <p className="text-xs text-muted-foreground mt-1 text-right">
-                    {formik.values.description?.length || 0}/500
-                  </p>
                 </div>
 
                 <div>
                   <label htmlFor="image_url" className="block text-sm font-medium text-foreground mb-1.5">Image URL</label>
                   <input
                     id="image_url"
-                    name="image_url"
                     type="url"
-                    value={formik.values.image_url}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
+                    {...register('image_url')}
                     className={`w-full px-3 py-2 text-sm border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 ${
-                      formik.touched.image_url && formik.errors.image_url ? 'border-destructive' : 'border-border'
+                      errors.image_url ? 'border-destructive' : 'border-border'
                     }`}
                     placeholder="https://..."
                   />
-                  {formik.touched.image_url && formik.errors.image_url && (
-                    <p className="mt-1 text-xs text-destructive">{formik.errors.image_url}</p>
+                  {errors.image_url && (
+                    <p className="mt-1 text-xs text-destructive">{errors.image_url.message}</p>
                   )}
                 </div>
 
@@ -411,9 +375,7 @@ export default function ProductsPage() {
                   <input
                     type="checkbox"
                     id="available"
-                    name="available"
-                    checked={formik.values.available}
-                    onChange={formik.handleChange}
+                    {...register('available')}
                     className="rounded border-border"
                   />
                   <label htmlFor="available" className="text-sm text-foreground">Available</label>
@@ -430,10 +392,10 @@ export default function ProductsPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={formik.isSubmitting}
+                  disabled={isSubmitting}
                   className="flex-1 px-4 py-2.5 text-sm bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {formik.isSubmitting
+                  {isSubmitting
                     ? 'Saving...'
                     : form.mode === 'add'
                       ? 'Add Product'

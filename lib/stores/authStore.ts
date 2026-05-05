@@ -1,7 +1,14 @@
 import { create } from 'zustand';
 import type { TenantUser, Tenant } from '@/lib/types';
 
+// Use sessionStorage instead of localStorage for refresh tokens
+// This limits token exposure to the current browser tab session only
 const REFRESH_TOKEN_KEY = 'keceoil_refresh_token';
+
+function getStorage(): Storage | null {
+  if (typeof window === 'undefined') return null;
+  return sessionStorage;
+}
 
 interface AuthState {
   user: TenantUser | null;
@@ -33,8 +40,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   isHydrated: false,
 
   setAuth: ({ user, tenant, accessToken, refreshToken }) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    const storage = getStorage();
+    if (storage) {
+      storage.setItem(REFRESH_TOKEN_KEY, refreshToken);
     }
     set({
       user,
@@ -49,13 +57,15 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   getRefreshToken: () => {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem(REFRESH_TOKEN_KEY);
+    const storage = getStorage();
+    if (!storage) return null;
+    return storage.getItem(REFRESH_TOKEN_KEY);
   },
 
   logout: () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
+    const storage = getStorage();
+    if (storage) {
+      storage.removeItem(REFRESH_TOKEN_KEY);
     }
     set({
       user: null,
