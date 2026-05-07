@@ -24,7 +24,7 @@ export function Header() {
             <div className="bg-white rounded-lg p-1 shadow-sm">
               <Image
                 src="https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1776681497/download_5_qdevvi.webp"
-                alt="Kecc Oil"
+                alt="Kece Oil"
                 width={48}
                 height={48}
                 priority
@@ -37,7 +37,7 @@ export function Header() {
           <nav className="flex items-center gap-5 sm:gap-8">
             <Link
               href="/"
-              className={`text-base font-semibold transition-colors ${
+              className={`text-[16px] sm:text-[18px] md:text-[20px] font-semibold transition-colors ${
                 pathname === '/'
                   ? 'text-primary'
                   : 'text-neutral-300 hover:text-white'
@@ -47,7 +47,7 @@ export function Header() {
             </Link>
             <Link
               href="/products"
-              className={`text-base font-semibold transition-colors ${
+              className={`text-[16px] sm:text-[18px] md:text-[20px] font-semibold transition-colors ${
                 pathname === '/products'
                   ? 'text-primary'
                   : 'text-neutral-300 hover:text-white'

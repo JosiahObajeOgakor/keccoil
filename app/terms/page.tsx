@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Terms & Conditions',
-  description: 'Kecc Oil terms and conditions — rules governing the use of our website and services.',
+  description: 'Kece Oil terms and conditions — rules governing the use of our website and services.',
 };
 
 export default function TermsPage() {
@@ -30,7 +30,7 @@ export default function TermsPage() {
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-4">1. Acceptance of Terms</h2>
               <p className="text-muted-foreground leading-relaxed">
-                By accessing or using the Kecc Oil website (keceoil.com), placing an order, or interacting with our AI chat assistant, you agree to be bound by these Terms and Conditions. If you do not agree to all of these terms, you must not use our services. These terms constitute a legally binding agreement between you and Kecc Oil Nigeria.
+                By accessing or using the Kece Oil website (keceoil.com), placing an order, or interacting with our AI chat assistant, you agree to be bound by these Terms and Conditions. If you do not agree to all of these terms, you must not use our services. These terms constitute a legally binding agreement between you and Kece Oil Nigeria.
               </p>
             </div>
 
@@ -38,11 +38,11 @@ export default function TermsPage() {
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-4">2. Definitions</h2>
               <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                <li><strong className="text-foreground">&quot;Platform&quot;</strong> refers to the Kecc Oil website, AI chat assistant, and all associated services.</li>
+                <li><strong className="text-foreground">&quot;Platform&quot;</strong> refers to the Kece Oil website, AI chat assistant, and all associated services.</li>
                 <li><strong className="text-foreground">&quot;Customer&quot; or &quot;You&quot;</strong> refers to any person who accesses or uses our Platform.</li>
                 <li><strong className="text-foreground">&quot;Products&quot;</strong> refers to the red palm oil products listed on our Platform.</li>
                 <li><strong className="text-foreground">&quot;Order&quot;</strong> refers to a request to purchase Products placed through our Platform.</li>
-                <li><strong className="text-foreground">&quot;We&quot;, &quot;Us&quot;, &quot;Our&quot;</strong> refers to Kecc Oil Nigeria.</li>
+                <li><strong className="text-foreground">&quot;We&quot;, &quot;Us&quot;, &quot;Our&quot;</strong> refers to Kece Oil Nigeria.</li>
               </ul>
             </div>
 
@@ -138,7 +138,7 @@ export default function TermsPage() {
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-4">7. Quality Guarantee</h2>
               <p className="text-muted-foreground leading-relaxed">
-                All Kecc Oil products are food-grade certified and sourced from trusted local Nigerian producers. We stand behind the quality of our products. If you are unsatisfied with the quality of any product, please contact us within 48 hours of delivery and we will work to resolve the issue promptly.
+                All Kece Oil products are food-grade certified and sourced from trusted local Nigerian producers. We stand behind the quality of our products. If you are unsatisfied with the quality of any product, please contact us within 48 hours of delivery and we will work to resolve the issue promptly.
               </p>
             </div>
 
@@ -176,7 +176,7 @@ export default function TermsPage() {
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-4">10. Intellectual Property</h2>
               <p className="text-muted-foreground leading-relaxed">
-                All content on our Platform, including text, graphics, logos, images, product descriptions, and software, is the property of Kecc Oil or its licensors and is protected by Nigerian and international copyright laws. You may not reproduce, distribute, modify, or create derivative works from any content without our prior written consent.
+                All content on our Platform, including text, graphics, logos, images, product descriptions, and software, is the property of Kece Oil or its licensors and is protected by Nigerian and international copyright laws. You may not reproduce, distribute, modify, or create derivative works from any content without our prior written consent.
               </p>
             </div>
 
@@ -184,7 +184,7 @@ export default function TermsPage() {
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-4">11. Limitation of Liability</h2>
               <p className="text-muted-foreground leading-relaxed">
-                To the maximum extent permitted by law, Kecc Oil shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or relating to your use of our Platform or Products. Our total liability shall not exceed the amount you paid for the specific order giving rise to the claim.
+                To the maximum extent permitted by law, Kece Oil shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of or relating to your use of our Platform or Products. Our total liability shall not exceed the amount you paid for the specific order giving rise to the claim.
               </p>
             </div>
 
@@ -192,7 +192,7 @@ export default function TermsPage() {
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-4">12. Indemnification</h2>
               <p className="text-muted-foreground leading-relaxed">
-                You agree to indemnify and hold harmless Kecc Oil, its officers, directors, employees, and agents from and against any claims, damages, losses, liabilities, and expenses arising out of your use of our Platform, violation of these Terms, or infringement of any third-party rights.
+                You agree to indemnify and hold harmless Kece Oil, its officers, directors, employees, and agents from and against any claims, damages, losses, liabilities, and expenses arising out of your use of our Platform, violation of these Terms, or infringement of any third-party rights.
               </p>
             </div>
 
@@ -229,7 +229,7 @@ export default function TermsPage() {
               <ul className="space-y-2 text-muted-foreground">
                 <li><strong className="text-foreground">Email:</strong> <a href="mailto:info@keceoil.com" className="text-primary hover:underline">info@keceoil.com</a></li>
                 <li><strong className="text-foreground">Website:</strong> <a href="https://keceoil.com" className="text-primary hover:underline">keceoil.com</a></li>
-                <li><strong className="text-foreground">Business Name:</strong> Kecc Oil Nigeria</li>
+                <li><strong className="text-foreground">Business Name:</strong> Kece Oil Nigeria</li>
               </ul>
             </div>
 

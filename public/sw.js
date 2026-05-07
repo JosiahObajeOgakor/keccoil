@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = 'keceoil-v1';
+const CACHE_NAME = 'keceoil-v2';
 const STATIC_ASSETS = [
   '/',
   '/products',
@@ -8,7 +8,7 @@ const STATIC_ASSETS = [
   '/register',
 ];
 
-const API_CACHE_NAME = 'keceoil-api-v1';
+const API_CACHE_NAME = 'keceoil-api-v2';
 const API_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 self.addEventListener('install', (event) => {

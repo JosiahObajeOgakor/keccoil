@@ -4,43 +4,43 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ===== Responsive Font Sizing =====
-   Mobile (<640px): 12px base
-   Tablet (640–1024px): 14px base
-   Desktop (>1024px): 16px base
+   Mobile (<640px): 16px base (WCAG minimum for body text)
+   Tablet (640–1024px): 17px base
+   Desktop (>1024px): 18px base
    All rem values scale proportionally.
    Respects user's browser zoom & font-size for accessibility.
 */
 html {
-  font-size: 12px; /* Mobile default */
+  font-size: 16px; /* Mobile default — accessible minimum */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
 
 @media (min-width: 640px) {
   html {
-    font-size: 14px; /* Tablet */
+    font-size: 17px; /* Tablet */
   }
 }
 
 @media (min-width: 1024px) {
   html {
-    font-size: 16px; /* Desktop */
+    font-size: 18px; /* Desktop */
   }
 }
 
 /* Visually impaired: respect user preference for larger text */
 @media (prefers-contrast: more) {
   html {
-    font-size: 14px;
+    font-size: 18px;
   }
   @media (min-width: 640px) {
     html {
-      font-size: 16px;
+      font-size: 19px;
     }
   }
   @media (min-width: 1024px) {
     html {
-      font-size: 18px;
+      font-size: 20px;
     }
   }
 }
@@ -54,15 +54,15 @@ body {
 
 /* Typography scale — all rem-based so they scale with html root */
 .text-xs {
-  font-size: 0.75rem !important;   /* 9/10.5/12px */
+  font-size: 0.8rem !important;    /* ~13/14/14px — never below 12px */
   line-height: 1.5;
 }
 .text-sm {
-  font-size: 0.875rem !important;  /* 10.5/12.25/14px */
+  font-size: 0.9rem !important;    /* ~14/15/16px */
   line-height: 1.5;
 }
 .text-base {
-  font-size: 1rem !important;      /* 12/14/16px */
+  font-size: 1rem !important;      /* 16/17/18px */
   line-height: 1.6;
 }
 

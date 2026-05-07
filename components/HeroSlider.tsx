@@ -50,11 +50,11 @@ export function HeroSlider({
   };
 
   const nextSlide = () => {
-    goToSlide((currentSlide + 1) % slides.length);
+    goToSlide((currentSlide + 1) % slides?.length);
   };
 
   const prevSlide = () => {
-    goToSlide((currentSlide - 1 + slides.length) % slides.length);
+    goToSlide((currentSlide - 1 + slides?.length) % slides?.length);
   };
 
   const slide = slides[currentSlide];
@@ -68,10 +68,10 @@ export function HeroSlider({
       aria-label="Featured content slideshow"
       aria-roledescription="carousel"
     >
-      {/* Responsive viewport height */}
-      <div className="relative w-full h-[55vh] sm:h-[65vh] md:h-[70vh] lg:h-[80vh] min-h-[280px] max-h-[800px]">
+      {/* Fits all screens: uses dvh for mobile browser chrome awareness, capped to not overflow */}
+      <div className="relative w-full h-[56dvh] sm:h-[60dvh] md:h-[70dvh] lg:h-[85dvh] xl:h-screen">
         {/* Slides */}
-        {slides.map((s, index) => (
+        {slides?.map((s, index) => (
           <div
             key={s.id}
             className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
@@ -85,7 +85,7 @@ export function HeroSlider({
             {s.type === 'video' ? (
               <video
                 src={s.src}
-                className="w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
                 autoPlay
                 muted
                 loop
@@ -94,7 +94,7 @@ export function HeroSlider({
             ) : (
               <Image
                 src={s.src}
-                alt={s.title || `Kecc Oil promotional image ${index + 1}`}
+                alt={s.title || `Kece Oil promotional image ${index + 1}`}
                 fill
                 className="object-cover"
                 priority={index === 0}
@@ -103,16 +103,16 @@ export function HeroSlider({
               />
             )}
 
-            {/* Overlay with content */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent flex flex-col justify-end p-6 sm:p-10 md:p-12 lg:p-16">
-              <div className="max-w-2xl">
+            {/* Overlay — bottom gradient on mobile (portrait friendly), side gradient on desktop */}
+            <div className="absolute inset-0 bg-gradient-to-t sm:bg-gradient-to-r from-black/70 via-black/40 to-transparent flex flex-col justify-end p-5 pb-14 sm:p-8 sm:pb-16 md:p-12 lg:p-16">
+              <div className="max-w-xl lg:max-w-2xl">
                 {s.title && (
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 sm:mb-3 leading-tight">
+                  <h2 className="text-lg sm:text-2xl md:text-3xl lg:text-5xl font-bold text-white mb-1 sm:mb-2 md:mb-3 leading-tight line-clamp-2">
                     {s.title}
                   </h2>
                 )}
                 {s.subtitle && (
-                  <p className="text-sm sm:text-base lg:text-lg text-white/90 mb-5 sm:mb-8 leading-relaxed max-w-lg">
+                  <p className="text-[13px] leading-snug sm:text-sm md:text-base text-white/90 mb-3 sm:mb-5 md:mb-6 max-w-sm sm:max-w-md lg:max-w-lg line-clamp-2">
                     {s.subtitle}
                   </p>
                 )}
@@ -121,14 +121,14 @@ export function HeroSlider({
                     href={s.ctaLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block px-8 py-3.5 sm:px-10 sm:py-4 bg-primary text-primary-foreground font-bold rounded-full hover:bg-primary/90 transition-all text-base sm:text-lg shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95"
+                    className="inline-block px-5 py-2.5 sm:px-7 sm:py-3 md:px-8 md:py-3.5 bg-primary text-primary-foreground font-bold rounded-full hover:bg-primary/90 transition-all text-xs sm:text-sm md:text-base shadow-lg shadow-primary/30 hover:scale-105 active:scale-95"
                   >
                     {s.ctaText}
                   </a>
                 ) : (
                   <Link
                     href={s.ctaLink}
-                    className="inline-block px-8 py-3.5 sm:px-10 sm:py-4 bg-primary text-primary-foreground font-bold rounded-full hover:bg-primary/90 transition-all text-base sm:text-lg shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95"
+                    className="inline-block px-5 py-2.5 sm:px-7 sm:py-3 md:px-8 md:py-3.5 bg-primary text-primary-foreground font-bold rounded-full hover:bg-primary/90 transition-all text-xs sm:text-sm md:text-base shadow-lg shadow-primary/30 hover:scale-105 active:scale-95"
                   >
                     {s.ctaText}
                   </Link>
@@ -138,49 +138,29 @@ export function HeroSlider({
           </div>
         ))}
 
-        {/* Navigation Buttons */}
+        {/* Navigation Buttons — hidden on mobile, visible on tablet+ */}
         <button
           onClick={prevSlide}
-          className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 bg-white/20 hover:bg-white/30 text-white rounded-full flex items-center justify-center transition-colors backdrop-blur-sm"
+          className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 bg-white/20 hover:bg-white/30 text-white rounded-full items-center justify-center transition-colors backdrop-blur-sm"
           aria-label="Previous slide"
         >
-          <svg
-            className="w-5 h-5 sm:w-6 sm:h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
+          <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
         <button
           onClick={nextSlide}
-          className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-12 sm:h-12 bg-white/20 hover:bg-white/30 text-white rounded-full flex items-center justify-center transition-colors backdrop-blur-sm"
+          className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 bg-white/20 hover:bg-white/30 text-white rounded-full items-center justify-center transition-colors backdrop-blur-sm"
           aria-label="Next slide"
         >
-          <svg
-            className="w-5 h-5 sm:w-6 sm:h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
+          <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
 
-        {/* Dot Indicators */}
-        <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+        {/* Dot Indicators — hidden on mobile, visible on tablet+ */}
+        <div className="hidden sm:flex absolute bottom-6 left-1/2 -translate-x-1/2 z-20 gap-2">
           {slides.map((_, index) => (
             <button
               key={index}
@@ -195,8 +175,8 @@ export function HeroSlider({
           ))}
         </div>
 
-        {/* Slide counter */}
-        <div className="absolute top-4 sm:top-6 right-4 sm:right-6 z-20 bg-black/40 backdrop-blur-sm text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium">
+        {/* Slide counter — hidden on mobile */}
+        <div className="hidden sm:block absolute top-4 md:top-6 right-4 md:right-6 z-20 bg-black/40 backdrop-blur-sm text-white px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-medium">
           {currentSlide + 1} / {slides.length}
         </div>
       </div>

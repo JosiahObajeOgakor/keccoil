@@ -48,13 +48,13 @@ export function AdminSidebar() {
       <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
         <Image
           src="https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1776681497/download_5_qdevvi.webp"
-          alt="Kecc Oil"
+          alt="Kece Oil"
           width={32}
           height={32}
           className="w-8 h-8 rounded-lg object-cover"
         />
         <div>
-          <h1 className="font-semibold text-foreground text-sm">Kecc Oil</h1>
+          <h1 className="font-semibold text-foreground text-sm">Kece Oil</h1>
           <p className="text-xs text-muted-foreground">Admin Panel</p>
         </div>
       </div>

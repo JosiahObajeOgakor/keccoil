@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import { ChatWidgetWrapper } from '@/components/ChatWidgetWrapper'
 import { GlobalLoader } from '@/components/GlobalLoader'
 import { Toaster } from 'sonner'
@@ -7,8 +8,8 @@ import './globals.css'
 export const metadata: Metadata = {
   metadataBase: new URL('https://keceoil.com'),
   title: {
-    default: 'Kecc Oil — Premium Red Palm Oil | Wholesale & Retail in Nigeria',
-    template: '%s | Kecc Oil',
+    default: 'Kece Oil — Premium Red Palm Oil | Wholesale & Retail in Nigeria',
+    template: '%s | Kece Oil',
   },
   description:
     'Buy premium, locally-sourced red palm oil in Nigeria. Food-grade certified, wholesale pricing from ₦4,000. 3L to 25L sizes. Fast delivery to Lagos, Abuja & nationwide. Order via WhatsApp.',
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
     'palm oil Nigeria',
     'buy palm oil online',
     'wholesale palm oil',
-    'Kecc Oil',
+    'Kece Oil',
     'food grade palm oil',
     'bulk palm oil Lagos',
     'palm oil Abuja',
@@ -25,9 +26,9 @@ export const metadata: Metadata = {
     'cold pressed palm oil',
     'palm oil delivery Nigeria',
   ],
-  authors: [{ name: 'Kecc Oil' }],
-  creator: 'Kecc Oil',
-  publisher: 'Kecc Oil',
+  authors: [{ name: 'Kece Oil' }],
+  creator: 'Kece Oil',
+  publisher: 'Kece Oil',
   robots: {
     index: true,
     follow: true,
@@ -43,8 +44,8 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_NG',
     url: 'https://keceoil.com',
-    siteName: 'Kecc Oil',
-    title: 'Kecc Oil — Premium Red Palm Oil | Wholesale & Retail in Nigeria',
+    siteName: 'Kece Oil',
+    title: 'Kece Oil — Premium Red Palm Oil | Wholesale & Retail in Nigeria',
     description:
       'Buy premium red palm oil. Food-grade certified, from ₦4,000. 3L–25L sizes with fast delivery across Nigeria.',
     images: [
@@ -52,13 +53,13 @@ export const metadata: Metadata = {
         url: 'https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1776640671/download_2_a0a1og.png',
         width: 1200,
         height: 630,
-        alt: 'Kecc Oil — Premium Red Palm Oil',
+        alt: 'Kece Oil — Premium Red Palm Oil',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Kecc Oil — Premium Red Palm Oil in Nigeria',
+    title: 'Kece Oil — Premium Red Palm Oil in Nigeria',
     description:
       'Food-grade certified red palm oil. Wholesale & retail from ₦4,000. Fast delivery nationwide.',
     images: [
@@ -97,9 +98,11 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
       </head>
       <body className="font-sans antialiased bg-background text-foreground">
-        <script
+        <Script
+          id="sw-register"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
-            __html: `if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js')})}`,
+            __html: `if('serviceWorker' in navigator && location.hostname !== 'localhost'){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js')})}`,
           }}
         />
         <script
@@ -108,7 +111,7 @@ export default function RootLayout({
             __html: JSON.stringify({
               '@context': 'https://schema.org',
               '@type': 'Organization',
-              name: 'Kecc Oil',
+              name: 'Kece Oil',
               url: 'https://keceoil.com',
               logo: 'https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1776681497/download_5_qdevvi.webp',
               description:

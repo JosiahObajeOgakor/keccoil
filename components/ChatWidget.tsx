@@ -112,7 +112,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;p
 @media print{.print-btn{display:none}}
 </style></head><body>
 <div class="header">
-<h1>🛢️ Kecc Oil</h1>
+<h1>🛢️ Kece Oil</h1>
 <p>Premium Red Palm Oil</p>
 <p style="margin-top:4px">Payment Receipt</p>
 </div>
@@ -126,7 +126,7 @@ ${statusLabel}
 <div class="row"><span class="label">Date</span><span class="value">${safeDate}</span></div>
 ${orderHtml}
 <div class="footer">
-<p>Kecc Oil — keceoil.com</p>
+<p>Kece Oil — keceoil.com</p>
 <p style="margin-top:4px">Thank you for your purchase!</p>
 </div>
 <button class="print-btn" onclick="window.print()">🖨️ Print Receipt</button>
@@ -194,7 +194,7 @@ ${orderHtml}
       <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex items-center gap-2 bg-primary text-primary-foreground rounded-full shadow-lg px-4 py-3 cursor-pointer hover:bg-primary/90 transition-colors">
         <button onClick={() => setMinimized(false)} className="flex items-center gap-2">
           <MessageCircle className="w-4 h-4" />
-          <span className="text-sm font-medium">Kecc Oil Chat</span>
+          <span className="text-sm font-medium">Kece Oil Chat</span>
           {sessionActive && ttl > 0 && (
             <span className={`text-[10px] font-mono ${ttlColor}`}>{formatTtl(ttl)}</span>
           )}
@@ -225,7 +225,7 @@ ${orderHtml}
             <span className="text-sm">🛢️</span>
           </div>
           <div>
-            <h3 className="font-semibold text-sm">Kecc Oil</h3>
+            <h3 className="font-semibold text-sm">Kece Oil</h3>
             <div className="flex items-center gap-2">
               <p className="text-xs opacity-80">
                 {isTyping ? 'Typing...' : sessionActive ? 'Online — AI Assistant' : 'Online — Enter your phone'}

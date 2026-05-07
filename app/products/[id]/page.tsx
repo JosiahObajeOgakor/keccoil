@@ -22,9 +22,9 @@ export async function generateMetadata({
     const priceNaira = (product.price / 100).toLocaleString('en-NG');
     return {
       title: `${product.name} — ₦${priceNaira} | Buy Red Palm Oil Online`,
-      description: `${product.description || product.name}. ₦${priceNaira}. Food-grade certified red palm oil. Fast delivery across Nigeria. Order now from Kecc Oil.`,
+      description: `${product.description || product.name}. ₦${priceNaira}. Food-grade certified red palm oil. Fast delivery across Nigeria. Order now from Kece Oil.`,
       openGraph: {
-        title: `${product.name} | Kecc Oil`,
+        title: `${product.name} | Kece Oil`,
         description: `Buy ${product.name} for ₦${priceNaira}. Premium red palm oil with fast delivery.`,
         images: product.image_url
           ? [{ url: product.image_url, width: 800, height: 800, alt: product.name }]
@@ -37,8 +37,8 @@ export async function generateMetadata({
     };
   } catch {
     return {
-      title: 'Product Details | Kecc Oil',
-      description: 'View product details and order premium red palm oil from Kecc Oil.',
+      title: 'Product Details | Kece Oil',
+      description: 'View product details and order premium red palm oil from Kece Oil.',
     };
   }
 }
@@ -61,7 +61,7 @@ export default async function ProductDetailsPage({
       name: product.name,
       description: product.description || product.name,
       image: product.image_url,
-      brand: { '@type': 'Brand', name: 'Kecc Oil' },
+      brand: { '@type': 'Brand', name: 'Kece Oil' },
       offers: {
         '@type': 'Offer',
         url: `https://keceoil.com/products/${id}`,
@@ -70,7 +70,7 @@ export default async function ProductDetailsPage({
         availability: product.available
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
-        seller: { '@type': 'Organization', name: 'Kecc Oil' },
+        seller: { '@type': 'Organization', name: 'Kece Oil' },
       },
     };
   } catch {

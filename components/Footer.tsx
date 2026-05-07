@@ -12,12 +12,12 @@ export function Footer() {
             <div className="flex items-center gap-3 mb-4">
               <Image
                 src="https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1776681497/download_5_qdevvi.webp"
-                alt="Kecc Oil"
+                alt="Kece Oil"
                 width={56}
                 height={56}
                 className="w-14 h-14 rounded-xl object-cover border border-border shadow-sm"
               />
-              <span className="font-bold text-foreground text-base">Kecc Oil</span>
+              <span className="font-bold text-foreground text-base">Kece Oil</span>
             </div>
             <p className="text-base text-muted-foreground">
               Premium red palm oil. Locally sourced, quality certified, wholesale pricing.
@@ -89,7 +89,7 @@ export function Footer() {
 
         {/* Bottom */}
         <div className="border-t border-border pt-8 flex flex-col sm:flex-row items-center justify-between text-sm text-muted-foreground">
-          <p>&copy; 2024 Kecc Oil. All rights reserved. Premium Red Palm Oil.</p>
+          <p>&copy; 2024 Kece Oil. All rights reserved. Premium Red Palm Oil.</p>
           <div className="flex gap-6 mt-4 sm:mt-0">
             <a href="/privacy" className="hover:text-primary transition-colors">
               Privacy

@@ -26,7 +26,7 @@ export interface ChatMessage {
 const GREETING_MESSAGE: ChatMessage = {
   id: 'greeting',
   sender: 'ai',
-  text: "Hello! 👋 Welcome to Kecc Oil. I can help you browse our red palm oil products, place an order, or answer any questions.\n\nPlease enter your phone number to get started.",
+  text: "Hello! 👋 Welcome to Kece Oil. I can help you browse our red palm oil products, place an order, or answer any questions.\n\nPlease enter your phone number to get started.",
   timestamp: new Date().toISOString(),
 };
 

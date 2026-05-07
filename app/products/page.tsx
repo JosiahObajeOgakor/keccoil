@@ -54,7 +54,7 @@ export default function ProductsPage() {
         {/* Page Header */}
         <section
           className="relative border-b border-border bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1776682748/download_10_y79uft.png')" }}
+          style={{ backgroundImage: "url('https://res.cloudinary.com/detpqzhnq/image/upload/v1778179220/ChatGPT_Image_May_7_2026_07_39_56_PM_mhaglh.png')" }}
         >
           <div className="absolute inset-0 bg-black/60" />
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">

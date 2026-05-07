@@ -7,7 +7,7 @@ export function generateWhatsAppLink(
   quantity: number = 1,
   deliveryMethod?: DeliveryMethod
 ): string {
-  let msg = `Hello Kecc Oil, I'm interested in ordering:\n\n📦 ${productName}\n💬 Quantity: ${quantity}`;
+  let msg = `Hello Kece Oil, I'm interested in ordering:\n\n📦 ${productName}\n💬 Quantity: ${quantity}`;
 
   if (deliveryMethod === 'pickup') {
     msg += `\n🏪 Delivery: Pickup from shop`;
