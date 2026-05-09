@@ -23,7 +23,7 @@ export function Header() {
           <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
             <div className="bg-white rounded-lg p-1 shadow-sm">
               <Image
-                src="https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1776681497/download_5_qdevvi.webp"
+                src="/kecelogo.jpeg"
                 alt="Kece Oil"
                 width={48}
                 height={48}
