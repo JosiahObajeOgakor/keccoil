@@ -11,7 +11,7 @@ export function Footer() {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <Image
-                src="https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1776681497/download_5_qdevvi.webp"
+                src="/kecelogo.jpeg"
                 alt="Kece Oil"
                 width={56}
                 height={56}
