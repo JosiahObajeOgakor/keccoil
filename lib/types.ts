@@ -200,6 +200,7 @@ export interface TenantUser {
   name: string;
   role: TenantUserRole;
   tenant_id: number;
+  last_login_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -278,6 +279,12 @@ export interface FundWalletRequest {
 export interface FundWalletResponse {
   payment_url: string;
   reference: string;
+}
+
+export interface VerifyWalletFundingResponse {
+  message: string;
+  balance_kobo: number;
+  balance_naira: number;
 }
 
 // ─── Billing ────────────────────────────────────────────────────
@@ -452,13 +459,15 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   user: TenantUser;
+  tenant: Tenant;
   access_token: string;
   refresh_token: string;
+  expires_in: number;
 }
 
 export interface RefreshResponse {
   access_token: string;
-  refresh_token: string;
+  expires_in: number;
 }
 
 // ─── Admin Tenant Management ────────────────────────────────────
@@ -478,10 +487,24 @@ export interface AdminRevenueStats {
 }
 
 export interface CreateTenantRequest {
-  business_name: string;
-  whatsapp_phone_id: string;
-  whatsapp_token: string;
+  name: string;
+  slug: string;
+  business_name?: string;
+  business_email?: string;
+  business_phone?: string;
+  contact_number?: string;
+  wa_phone_number_id?: string;
+  wa_api_token?: string;
+  wa_verify_token?: string;
   ai_system_prompt?: string;
+  ai_model?: string;
+  openai_api_key?: string;
+  paystack_public_key?: string;
+  paystack_secret_key?: string;
+  welcome_message?: string;
+  help_message?: string;
+  delivery_zones_json?: string;
+  pre_filter_enabled?: boolean;
 }
 
 export interface CreateTenantUserRequest {

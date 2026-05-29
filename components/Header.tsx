@@ -27,6 +27,7 @@ export function Header() {
                 alt="Kece Oil"
                 width={48}
                 height={48}
+                unoptimized
                 priority
                 className="h-10 sm:h-11 w-auto object-contain rounded-md"
               />

@@ -1,14 +1,13 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = 'keceoil-v3';
+const CACHE_NAME = 'keceoil-v4';
 const STATIC_ASSETS = [
-  '/',
   '/products',
   '/login',
   '/register',
 ];
 
-const API_CACHE_NAME = 'keceoil-api-v3';
+const API_CACHE_NAME = 'keceoil-api-v4';
 const API_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 self.addEventListener('install', (event) => {
@@ -57,9 +56,25 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets: cache-first
+  // Static assets: network-first for Next.js bundles, cache-first for images/fonts
+  if (url.pathname.startsWith('/_next/static/')) {
+    // Next.js JS/CSS chunks — network-first to avoid stale hydration mismatches
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request).then((cached) => cached || Response.error()))
+    );
+    return;
+  }
+
   if (
-    url.pathname.match(/\.(js|css|png|jpg|jpeg|webp|svg|ico|woff2?)$/) ||
+    url.pathname.match(/\.(png|jpg|jpeg|webp|svg|ico|woff2?)$/) ||
     url.hostname === 'res.cloudinary.com'
   ) {
     event.respondWith(

@@ -7,6 +7,7 @@ import { Product } from '@/lib/types';
 import { formatPrice, WHATSAPP_BUSINESS_NUMBER } from '@/lib/constants';
 import { generateWhatsAppLink } from '@/lib/utils/whatsapp';
 import { OrderModal } from '@/components/OrderModal';
+import { optimizeCloudinaryUrl } from '@/lib/utils';
 
 interface ProductCardProps {
   product: Product;
@@ -28,7 +29,7 @@ export function ProductCard({ product, showPrice = true }: ProductCardProps) {
         <div className="relative overflow-hidden bg-secondary h-48 sm:h-56 md:h-64">
           {product.image_url ? (
             <Image
-              src={product.image_url}
+              src={optimizeCloudinaryUrl(product.image_url, 640)}
               alt={product.name}
               fill
               loading="lazy"

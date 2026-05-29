@@ -1,13 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { getTenantWalletBalance, getTenantWalletTransactions, fundTenantWallet } from '@/lib/api';
+import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { getTenantWalletBalance, getTenantWalletTransactions, fundTenantWallet, verifyWalletFunding } from '@/lib/api';
 import { formatPrice } from '@/lib/constants';
 import type { WalletBalance, WalletTransaction } from '@/lib/types';
 import { Wallet, Plus, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import Script from 'next/script';
 
 export default function WalletPage() {
+  const router = useRouter();
   const [balance, setBalance] = useState<WalletBalance | null>(null);
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [total, setTotal] = useState(0);
@@ -17,6 +20,7 @@ export default function WalletPage() {
   const [fundAmount, setFundAmount] = useState('');
   const [fundEmail, setFundEmail] = useState('');
   const [isFunding, setIsFunding] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const limit = 20;
 
   const fetchData = async () => {
@@ -39,6 +43,32 @@ export default function WalletPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
+  // Handle verification after Paystack popup completes
+  const handleVerify = useCallback(async (reference: string) => {
+    setIsVerifying(true);
+    try {
+      await verifyWalletFunding(reference);
+      // Give backend time to credit the wallet, then refresh
+      await new Promise((r) => setTimeout(r, 2000));
+      await fetchData();
+      toast.success('Wallet funded successfully!');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Payment verification failed');
+    } finally {
+      setIsVerifying(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Also handle case where user returns from redirect (fallback)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const reference = params.get('reference') || params.get('trxref');
+    if (!reference) return;
+    handleVerify(reference).then(() => router.replace('/dashboard/wallet'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleFund = async () => {
     const amountKobo = Math.round(parseFloat(fundAmount) * 100);
     if (isNaN(amountKobo) || amountKobo < 500000) {
@@ -52,7 +82,36 @@ export default function WalletPage() {
     setIsFunding(true);
     try {
       const res = await fundTenantWallet({ amount_kobo: amountKobo, email: fundEmail.trim() });
-      window.location.href = res.payment_url;
+
+      // Extract access code from Paystack payment URL
+      // URL format: https://checkout.paystack.com/{access_code}
+      const accessCode = res.payment_url.split('/').pop();
+
+      if (!accessCode || !(window as any).PaystackPop) {
+        // Fallback: redirect if inline script not loaded
+        window.location.href = res.payment_url;
+        return;
+      }
+
+      // Open Paystack inline popup — user stays on page, Zustand state preserved
+      const paystack = new (window as any).PaystackPop();
+      paystack.resumeTransaction(accessCode, {
+        onSuccess: () => {
+          setFundOpen(false);
+          setFundAmount('');
+          setFundEmail('');
+          setIsFunding(false);
+          handleVerify(res.reference);
+        },
+        onCancel: () => {
+          toast.error('Payment cancelled');
+          setIsFunding(false);
+        },
+        onError: () => {
+          toast.error('Payment failed. Please try again.');
+          setIsFunding(false);
+        },
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to initiate funding');
       setIsFunding(false);
@@ -63,12 +122,19 @@ export default function WalletPage() {
 
   return (
     <div>
+      <Script src="https://js.paystack.co/v2/inline.js" strategy="lazyOnload" />
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground">Wallet</h1>
         <p className="text-muted-foreground text-sm mt-1">Manage your wallet balance</p>
       </div>
 
       {/* Balance Card */}
+      {isVerifying && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          Verifying payment...
+        </div>
+      )}
       <div className="bg-card border border-border rounded-xl p-6 max-w-md mb-8">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">

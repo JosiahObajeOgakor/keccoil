@@ -14,7 +14,7 @@ const heroSlides: HeroSlide[] = [
   {
     id: '1',
     type: 'video',
-    src: 'https://res.cloudinary.com/detpqzhnq/video/upload/v1778181180/KECE_OIL_gptuo8.mp4',
+    src: 'https://res.cloudinary.com/detpqzhnq/video/upload/q_auto/f_auto/v1778181180/KECE_OIL_gptuo8.mp4',
     title: 'Premium Red Palm Oil in Nigeria',
     subtitle: 'Food-grade certified. Wholesale from \u20A64,000. Fast delivery nationwide.',
     ctaText: 'Browse Products',
@@ -23,7 +23,7 @@ const heroSlides: HeroSlide[] = [
   {
     id: '2',
     type: 'image',
-    src: 'https://res.cloudinary.com/detpqzhnq/image/upload/v1778179220/ChatGPT_Image_May_7_2026_07_39_56_PM_mhaglh.png',
+    src: 'https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/w_1920/c_limit/v1778179220/ChatGPT_Image_May_7_2026_07_39_56_PM_mhaglh.png',
     title: 'Buy Red Palm Oil Online',
     subtitle: '3L to 100L sizes available. Order now for same-day dispatch.',
     ctaText: 'Shop Now',

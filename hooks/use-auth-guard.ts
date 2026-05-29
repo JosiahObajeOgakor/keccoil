@@ -7,32 +7,25 @@ import { refreshAccessToken } from '@/lib/api';
 
 export function useAuthGuard() {
   const router = useRouter();
-  const { user, tenant, accessToken, isAuthenticated, isHydrated, setAuth, setAccessToken, logout, setHydrated } =
+  const { user, tenant, accessToken, refreshToken, isAuthenticated, isHydrated, setAccessToken, logout } =
     useAuthStore();
 
+  // Silently refresh access token using in-memory refresh token
   useEffect(() => {
-    if (isHydrated) return;
+    if (!isAuthenticated || !refreshToken) return;
 
-    const tryHydrate = async () => {
-      if (typeof window === 'undefined') return;
-      const refreshToken = sessionStorage.getItem('keceoil_refresh_token');
-      if (!refreshToken) {
-        setHydrated();
-        return;
-      }
-
+    // Refresh access token 1 minute before expiry (assume 15min token)
+    const interval = setInterval(async () => {
       try {
         const data = await refreshAccessToken(refreshToken);
         setAccessToken(data.access_token);
-        sessionStorage.setItem('keceoil_refresh_token', data.refresh_token);
       } catch {
         logout();
       }
-      setHydrated();
-    };
+    }, 13 * 60 * 1000); // every 13 minutes
 
-    tryHydrate();
-  }, [isHydrated, setAccessToken, logout, setHydrated]);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, refreshToken, setAccessToken, logout]);
 
   useEffect(() => {
     if (!isHydrated) return;

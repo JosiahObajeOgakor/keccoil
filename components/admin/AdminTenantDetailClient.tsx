@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { isAdminAuthenticated } from '@/lib/utils/auth';
 import {
-  adminGetTenant, adminUpdateTenant, adminGetTenantUsers,
+  adminGetTenant, adminUpdateTenant, getTenantUsers,
   adminCreateTenantUser, adminDeleteTenantUser,
   adminGetTenantUsage, adminChangePlan,
   adminSuspendSubscription, adminReactivateSubscription,
@@ -40,7 +40,7 @@ export default function AdminTenantDetailClient() {
     try {
       const [t, u, us] = await Promise.all([
         adminGetTenant(tenantId),
-        adminGetTenantUsers(tenantId),
+        getTenantUsers(),
         adminGetTenantUsage(tenantId),
       ]);
       setTenant(t);

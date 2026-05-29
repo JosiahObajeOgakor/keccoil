@@ -2,14 +2,8 @@
 const nextConfig = {
   output: 'export',
   images: {
-    unoptimized: true,
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'res.cloudinary.com',
-        pathname: '/detpqzhnq/**',
-      },
-    ],
+    loader: 'custom',
+    loaderFile: './lib/image-loader.ts',
   },
 }
 

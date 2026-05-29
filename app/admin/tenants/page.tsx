@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { isAdminAuthenticated } from '@/lib/utils/auth';
 import {
   adminGetTenants, adminCreateTenant, adminDeleteTenant,
-  adminGetTenant, adminUpdateTenant, adminGetTenantUsers,
+  adminGetTenant, adminUpdateTenant, getTenantUsers,
   adminCreateTenantUser, adminDeleteTenantUser,
   adminGetTenantUsage, adminChangePlan,
   adminSuspendSubscription, adminReactivateSubscription,
@@ -21,11 +21,14 @@ export default function AdminTenantsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
   const [formData, setFormData] = useState<CreateTenantRequest>({
+    name: '',
+    slug: '',
     business_name: '',
-    whatsapp_phone_id: '',
-    whatsapp_token: '',
+    wa_phone_number_id: '',
+    wa_api_token: '',
     ai_system_prompt: '',
   });
+  const [ownerCreds, setOwnerCreds] = useState({ email: '', password: '', name: '' });
 
   // Detail view state
   const [selectedTenantId, setSelectedTenantId] = useState<number | null>(null);
@@ -57,15 +60,42 @@ export default function AdminTenantsPage() {
   };
 
   const handleCreate = async () => {
-    if (!formData.business_name.trim()) {
-      toast.error('Business name is required');
+    if (!formData.name.trim()) {
+      toast.error('Name is required');
+      return;
+    }
+    if (!formData.slug.trim()) {
+      toast.error('Slug is required');
+      return;
+    }
+    if (!ownerCreds.email.trim()) {
+      toast.error('Owner email is required');
+      return;
+    }
+    if (!ownerCreds.name.trim()) {
+      toast.error('Owner name is required');
+      return;
+    }
+    if (ownerCreds.password.length < 8) {
+      toast.error('Owner password must be at least 8 characters');
       return;
     }
     try {
-      await adminCreateTenant(formData);
-      toast.success('Tenant created');
+      const newTenant = await adminCreateTenant(formData);
+      try {
+        await adminCreateTenantUser(newTenant.id, {
+          email: ownerCreds.email.trim().toLowerCase(),
+          password: ownerCreds.password,
+          name: ownerCreds.name.trim(),
+          role: 'owner',
+        });
+        toast.success(`Tenant created! Login: ${ownerCreds.email} / ${ownerCreds.password}`);
+      } catch (err) {
+        toast.warning('Tenant created but failed to create owner user: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      }
       setCreateOpen(false);
-      setFormData({ business_name: '', whatsapp_phone_id: '', whatsapp_token: '', ai_system_prompt: '' });
+      setFormData({ name: '', slug: '', business_name: '', wa_phone_number_id: '', wa_api_token: '', ai_system_prompt: '' });
+      setOwnerCreds({ email: '', password: '', name: '' });
       fetchTenants();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to create tenant');
@@ -91,7 +121,7 @@ export default function AdminTenantsPage() {
     try {
       const [t, u, us] = await Promise.all([
         adminGetTenant(id),
-        adminGetTenantUsers(id),
+        getTenantUsers(),
         adminGetTenantUsage(id),
       ]);
       setTenant(t);
@@ -395,44 +425,101 @@ export default function AdminTenantsPage() {
       {/* Create Modal */}
       {createOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-          <div className="bg-card border border-border rounded-xl p-6 max-w-lg w-full mx-4">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Create Tenant</h3>
-            <div className="space-y-4">
+          <div className="bg-card border border-border rounded-xl max-w-lg w-full mx-4 max-h-[90vh] flex flex-col">
+            <h3 className="text-lg font-semibold text-foreground p-6 pb-0 mb-4">Create Tenant</h3>
+            <div className="overflow-y-auto flex-1 px-6">
+              <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">Business Name *</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Name *</label>
                 <input
-                  value={formData.business_name}
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Tenant display name"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">Slug *</label>
+                <input
+                  value={formData.slug}
+                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                  placeholder="unique-slug"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">Business Name</label>
+                <input
+                  value={formData.business_name || ''}
                   onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
                   className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">WhatsApp Phone ID</label>
+                <label className="block text-sm font-medium text-foreground mb-1">WhatsApp Phone Number ID</label>
                 <input
-                  value={formData.whatsapp_phone_id}
-                  onChange={(e) => setFormData({ ...formData, whatsapp_phone_id: e.target.value })}
+                  value={formData.wa_phone_number_id || ''}
+                  onChange={(e) => setFormData({ ...formData, wa_phone_number_id: e.target.value })}
                   className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">WhatsApp Token</label>
+                <label className="block text-sm font-medium text-foreground mb-1">WhatsApp API Token</label>
                 <input
-                  value={formData.whatsapp_token}
-                  onChange={(e) => setFormData({ ...formData, whatsapp_token: e.target.value })}
+                  value={formData.wa_api_token || ''}
+                  onChange={(e) => setFormData({ ...formData, wa_api_token: e.target.value })}
                   className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">AI System Prompt</label>
                 <textarea
-                  value={formData.ai_system_prompt}
+                  value={formData.ai_system_prompt || ''}
                   onChange={(e) => setFormData({ ...formData, ai_system_prompt: e.target.value })}
                   rows={3}
                   className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                 />
               </div>
+
+              {/* Owner Credentials */}
+              <div className="border-t border-border pt-4 mt-4">
+                <h4 className="text-sm font-semibold text-foreground mb-3">Owner Login Credentials</h4>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">Owner Name *</label>
+                    <input
+                      value={ownerCreds.name}
+                      onChange={(e) => setOwnerCreds({ ...ownerCreds, name: e.target.value })}
+                      placeholder="John Doe"
+                      className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">Owner Email *</label>
+                    <input
+                      type="email"
+                      value={ownerCreds.email}
+                      onChange={(e) => setOwnerCreds({ ...ownerCreds, email: e.target.value })}
+                      placeholder="owner@business.com"
+                      className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">Default Password *</label>
+                    <input
+                      type="text"
+                      value={ownerCreds.password}
+                      onChange={(e) => setOwnerCreds({ ...ownerCreds, password: e.target.value })}
+                      placeholder="Min 8 characters"
+                      className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-secondary/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">Tenant will be required to change this on first login</p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex gap-3 justify-end mt-6">
+            </div>
+            <div className="flex gap-3 justify-end p-6 pt-4 border-t border-border">
               <button onClick={() => setCreateOpen(false)} className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-secondary transition-colors">Cancel</button>
               <button onClick={handleCreate} className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">Create</button>
             </div>

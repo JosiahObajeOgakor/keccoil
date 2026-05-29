@@ -1,21 +1,16 @@
-// Admin authentication using API key
-// Key is stored in sessionStorage and sent as X-Admin-Key header
-
-const STORAGE_KEY = 'adminApiKey';
+// Admin authentication using API key — stored in Zustand (in-memory only)
+import { useAuthStore } from '@/lib/stores/authStore';
 
 export function getAdminKey(): string | null {
-  if (typeof window === 'undefined') return null;
-  return sessionStorage.getItem(STORAGE_KEY);
+  return useAuthStore.getState().adminKey;
 }
 
 export function setAdminKey(key: string): void {
-  if (typeof window === 'undefined') return;
-  sessionStorage.setItem(STORAGE_KEY, key);
+  useAuthStore.getState().setAdminKey(key);
 }
 
 export function clearAdminSession(): void {
-  if (typeof window === 'undefined') return;
-  sessionStorage.removeItem(STORAGE_KEY);
+  useAuthStore.getState().setAdminKey(null);
 }
 
 export function isAdminAuthenticated(): boolean {

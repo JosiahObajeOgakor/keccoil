@@ -18,7 +18,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setAuth } = useAuthStore();
+  const { setAuth, setForcePasswordChange } = useAuthStore();
   const [error, setError] = useState('');
 
   const {
@@ -36,9 +36,14 @@ export default function LoginPage() {
       const res = await loginTenant(values.email.trim().toLowerCase(), values.password);
       setAuth({
         user: res.user,
+        tenant: res.tenant,
         accessToken: res.access_token,
         refreshToken: res.refresh_token,
       });
+      // Flag first login so dashboard shows password change modal
+      if (!res.user.last_login_at) {
+        setForcePasswordChange(true);
+      }
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid email or password.');

@@ -1,7 +1,10 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useAuthGuard } from '@/hooks/use-auth-guard';
+import { useAuthStore } from '@/lib/stores/authStore';
 import { TenantSidebar } from '@/components/tenant/TenantSidebar';
+import ChangePasswordModal from '@/components/ChangePasswordModal';
 
 export default function DashboardLayout({
   children,
@@ -9,6 +12,12 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { isLoading, isAuthenticated } = useAuthGuard();
+  const forcePasswordChange = useAuthStore((s) => s.forcePasswordChange);
+  const setForcePasswordChange = useAuthStore((s) => s.setForcePasswordChange);
+
+  const handlePasswordChanged = () => {
+    setForcePasswordChange(false);
+  };
 
   if (isLoading || !isAuthenticated) {
     return (
@@ -26,6 +35,7 @@ export default function DashboardLayout({
           {children}
         </div>
       </main>
+      <ChangePasswordModal open={forcePasswordChange} onComplete={handlePasswordChanged} />
     </div>
   );
 }

@@ -13,6 +13,7 @@ import * as api from '@/lib/api';
 import type { PricingData } from '@/lib/api';
 import { generateWhatsAppLink, type DeliveryMethod } from '@/lib/utils/whatsapp';
 import { OrderModal } from '@/components/OrderModal';
+import { optimizeCloudinaryUrl } from '@/lib/utils';
 
 interface ProductDetailsClientProps {
   productId: string;
@@ -121,10 +122,11 @@ export function ProductDetailsClient({ productId }: ProductDetailsClientProps) {
               <div className="relative w-full aspect-square bg-secondary rounded-xl overflow-hidden sticky top-8">
                 {product.image_url ? (
                   <Image
-                    src={product.image_url}
+                    src={optimizeCloudinaryUrl(product.image_url, 960)}
                     alt={product.name}
                     fill
                     className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     priority
                   />
                 ) : (

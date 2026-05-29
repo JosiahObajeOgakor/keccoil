@@ -31,6 +31,7 @@ import type {
   PaginatedWalletTransactions,
   FundWalletRequest,
   FundWalletResponse,
+  VerifyWalletFundingResponse,
   BillingUsage,
   Subscription,
   BillingInvoice,
@@ -141,9 +142,6 @@ async function doRefresh(): Promise<string | null> {
     }
     const data: RefreshResponse = await res.json();
     setAccessToken(data.access_token);
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('keceoil_refresh_token', data.refresh_token);
-    }
     return data.access_token;
   } catch {
     logout();
@@ -542,7 +540,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<RefreshR
 
 export async function logoutTenant(refreshToken: string): Promise<void> {
   const token = useAuthStore.getState().accessToken;
-  await fetch(`${API_BASE_URL}/auth/logout`, {
+  await fetch(`${API_BASE_URL}/tenant/auth/logout`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -552,10 +550,10 @@ export async function logoutTenant(refreshToken: string): Promise<void> {
   });
 }
 
-export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
-  await tenantFetch('/auth/change-password', {
+export async function changePassword(oldPassword: string, newPassword: string): Promise<void> {
+  await tenantFetch('/tenant/auth/change-password', {
     method: 'POST',
-    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+    body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
   });
 }
 
@@ -684,6 +682,19 @@ export async function fundTenantWallet(data: FundWalletRequest): Promise<FundWal
   });
 }
 
+export async function verifyWalletFunding(reference: string): Promise<VerifyWalletFundingResponse> {
+  const res = await fetch(`${API_BASE_URL}/wallet-paystack/webhook`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ event: 'charge.success', data: { reference } }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: res.statusText }));
+    throw new ApiError(body.error || 'Verification failed', res.status);
+  }
+  return res.json();
+}
+
 export async function getTenantWalletTransactions(params?: {
   page?: number;
   limit?: number;
@@ -745,6 +756,10 @@ export async function adminDeleteTenant(id: number): Promise<void> {
 
 export async function adminGetTenantUsers(tenantId: number): Promise<TenantUser[]> {
   return adminFetch<TenantUser[]>(`/admin/tenants/${tenantId}/users`);
+}
+
+export async function getTenantUsers(): Promise<TenantUser[]> {
+  return tenantFetch<TenantUser[]>('/tenant/users');
 }
 
 export async function adminCreateTenantUser(tenantId: number, data: CreateTenantUserRequest): Promise<TenantUser> {

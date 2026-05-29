@@ -15,6 +15,7 @@ export function Footer() {
                 alt="Kece Oil"
                 width={56}
                 height={56}
+                unoptimized
                 className="w-14 h-14 rounded-xl object-cover border border-border shadow-sm"
               />
               <span className="font-bold text-foreground text-base">Kece Oil</span>
