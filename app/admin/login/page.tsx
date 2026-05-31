@@ -45,7 +45,7 @@ export default function AdminLoginPage() {
               <span className="text-primary-foreground font-bold text-lg">KO</span>
             </div>
             <span className="font-semibold text-lg text-foreground hidden sm:inline">
-              KECE Oil
+              KeccOil
             </span>
           </Link>
           <h1 className="text-3xl font-bold text-foreground mb-2">Admin Login</h1>

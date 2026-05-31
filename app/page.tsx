@@ -87,12 +87,12 @@ export default function Home() {
         {/* Delivery Pricing */}
         <DeliveryPricing />
 
-        {/* Why Choose Kece Oil */}
+        {/* Why Choose KeccOil */}
         <section className="bg-secondary/30 border-t border-border">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
             <div className="max-w-3xl mx-auto">
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 text-center">
-                Why Choose Kece Oil?
+                Why Choose KeccOil?
               </h2>
               <p className="text-lg text-muted-foreground text-center mb-12">
                 Sourced from trusted local producers. Certified quality, unbeatable prices, delivered to your doorstep.

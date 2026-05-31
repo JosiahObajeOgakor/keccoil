@@ -24,7 +24,7 @@ export function Header() {
             <div className="bg-white rounded-lg p-1 shadow-sm">
               <Image
                 src="/kecelogo.jpeg"
-                alt="Kece Oil"
+                alt="KeccOil"
                 width={48}
                 height={48}
                 unoptimized

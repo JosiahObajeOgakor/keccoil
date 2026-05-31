@@ -70,7 +70,7 @@ export default function RegisterPage() {
             <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-lg">KO</span>
             </div>
-            <span className="font-semibold text-lg text-foreground">KECE Oil</span>
+            <span className="font-semibold text-lg text-foreground">KeccOil</span>
           </Link>
           <h1 className="text-3xl font-bold text-foreground mb-2">Create your account</h1>
           <p className="text-muted-foreground">

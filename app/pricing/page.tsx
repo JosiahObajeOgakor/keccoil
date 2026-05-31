@@ -71,7 +71,7 @@ export default function PricingPage() {
           <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-lg">KO</span>
           </div>
-          <span className="font-semibold text-lg text-foreground">KECE Oil</span>
+          <span className="font-semibold text-lg text-foreground">KeccOil</span>
         </Link>
         <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
           Simple, transparent pricing

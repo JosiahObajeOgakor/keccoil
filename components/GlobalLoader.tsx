@@ -20,7 +20,7 @@ export function GlobalLoader() {
       </div>
       {/* Text */}
       <p className="text-sm font-semibold text-foreground animate-pulse">
-        Kece Oil Loading
+        KeccOil Loading
       </p>
     </div>
   );

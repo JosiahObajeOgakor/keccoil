@@ -94,7 +94,7 @@ export function HeroSlider({
             ) : (
               <Image
                 src={s.src}
-                alt={s.title || `Kece Oil promotional image ${index + 1}`}
+                alt={s.title || `KeccOil promotional image ${index + 1}`}
                 fill
                 className="object-cover"
                 priority={index === 0}
