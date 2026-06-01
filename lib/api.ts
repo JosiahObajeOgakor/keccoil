@@ -73,25 +73,28 @@ function withLoader<T>(promise: Promise<T>): Promise<T> {
 }
 
 /** Create an AbortController with an optional timeout (default 30s) */
-export function createAbortController(timeoutMs = 30000): AbortController {
+export function createAbortController(timeoutMs = 30000): { controller: AbortController; clearTimeout: () => void } {
   const controller = new AbortController();
+  let timerId: ReturnType<typeof setTimeout> | null = null;
   if (timeoutMs > 0) {
-    const id = setTimeout(() => controller.abort(), timeoutMs);
-    controller.signal.addEventListener('abort', () => clearTimeout(id));
+    timerId = setTimeout(() => controller.abort(), timeoutMs);
   }
-  return controller;
+  return {
+    controller,
+    clearTimeout: () => { if (timerId) clearTimeout(timerId); },
+  };
 }
 
 function publicFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const controller = init?.signal ? null : createAbortController();
-  const signal = init?.signal ?? controller!.signal;
+  const ac = init?.signal ? null : createAbortController();
+  const signal = init?.signal ?? ac!.controller.signal;
   return withLoader(
     fetch(`${API_BASE_URL}${path}`, {
       ...init,
       signal,
       headers: { 'Content-Type': 'application/json', ...init?.headers },
     }).then((r) => {
-      if (controller) controller.abort(); // clears the timeout
+      if (ac) ac.clearTimeout();
       return handleResponse<T>(r);
     })
   );
@@ -100,8 +103,8 @@ function publicFetch<T>(path: string, init?: RequestInit): Promise<T> {
 function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const key = getAdminKey();
   if (!key) throw new ApiError('Not authenticated', 401);
-  const controller = init?.signal ? null : createAbortController();
-  const signal = init?.signal ?? controller!.signal;
+  const ac = init?.signal ? null : createAbortController();
+  const signal = init?.signal ?? ac!.controller.signal;
   return withLoader(
     fetch(`${API_BASE_URL}${path}`, {
       ...init,
@@ -112,7 +115,7 @@ function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
         ...init?.headers,
       },
     }).then((r) => {
-      if (controller) controller.abort();
+      if (ac) ac.clearTimeout();
       return handleResponse<T>(r);
     })
   );
