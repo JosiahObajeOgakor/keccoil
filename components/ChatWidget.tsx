@@ -144,8 +144,10 @@ ${orderHtml}
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleaned = phoneInput.trim().replace(/\s+/g, '');
-    if (cleaned.length < 10) return;
+    const cleaned = phoneInput.trim().replace(/[\s\-()]/g, '');
+    // Accept Nigerian numbers: 0XXXXXXXXXX (11 digits) or 234XXXXXXXXXX (13 digits)
+    const isValid = /^0[7-9]\d{9}$/.test(cleaned) || /^234[7-9]\d{9}$/.test(cleaned);
+    if (!isValid) return;
     setPhoneInput('');
     await startSession(cleaned);
   };
@@ -431,13 +433,14 @@ ${orderHtml}
             <input
               type="tel"
               value={phoneInput}
-              onChange={(e) => setPhoneInput(e.target.value)}
+              onChange={(e) => setPhoneInput(e.target.value.replace(/[^\d]/g, ''))}
               placeholder="e.g. 09150464707"
+              maxLength={11}
               className="flex-1 px-3.5 py-2.5 text-sm border border-border rounded-xl bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
             <button
               type="submit"
-              disabled={phoneInput.trim().replace(/\s+/g, '').length < 10}
+              disabled={!/^0[7-9]\d{9}$/.test(phoneInput.trim().replace(/[\s\-()]/g, '')) && !/^234[7-9]\d{9}$/.test(phoneInput.trim().replace(/[\s\-()]/g, ''))}
               className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
             >
               <Send className="w-4 h-4" />

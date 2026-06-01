@@ -23,11 +23,10 @@ export function Header() {
           <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
             <div className="bg-white rounded-lg p-1 shadow-sm">
               <Image
-                src="/kecelogo.jpeg"
+                src="https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/w_96/v1780315457/ChatGPT_Image_Jun_1_2026_01_04_02_PM_ecrinl.png"
                 alt="KeccOil"
                 width={48}
                 height={48}
-                unoptimized
                 priority
                 className="h-10 sm:h-11 w-auto object-contain rounded-md"
               />

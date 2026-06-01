@@ -76,26 +76,32 @@ function withLoader<T>(promise: Promise<T>): Promise<T> {
 export function createAbortController(timeoutMs = 30000): AbortController {
   const controller = new AbortController();
   if (timeoutMs > 0) {
-    setTimeout(() => controller.abort(), timeoutMs);
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    controller.signal.addEventListener('abort', () => clearTimeout(id));
   }
   return controller;
 }
 
 function publicFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const signal = init?.signal ?? createAbortController().signal;
+  const controller = init?.signal ? null : createAbortController();
+  const signal = init?.signal ?? controller!.signal;
   return withLoader(
     fetch(`${API_BASE_URL}${path}`, {
       ...init,
       signal,
       headers: { 'Content-Type': 'application/json', ...init?.headers },
-    }).then((r) => handleResponse<T>(r))
+    }).then((r) => {
+      if (controller) controller.abort(); // clears the timeout
+      return handleResponse<T>(r);
+    })
   );
 }
 
 function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const key = getAdminKey();
   if (!key) throw new ApiError('Not authenticated', 401);
-  const signal = init?.signal ?? createAbortController().signal;
+  const controller = init?.signal ? null : createAbortController();
+  const signal = init?.signal ?? controller!.signal;
   return withLoader(
     fetch(`${API_BASE_URL}${path}`, {
       ...init,
@@ -105,7 +111,10 @@ function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
         'X-Admin-Key': key,
         ...init?.headers,
       },
-    }).then((r) => handleResponse<T>(r))
+    }).then((r) => {
+      if (controller) controller.abort();
+      return handleResponse<T>(r);
+    })
   );
 }
 
@@ -149,7 +158,7 @@ async function doRefresh(): Promise<string | null> {
   }
 }
 
-async function refreshAccessTokenSilent(): Promise<string | null> {
+export async function refreshAccessTokenSilent(): Promise<string | null> {
   if (isRefreshing && refreshPromise) return refreshPromise;
   isRefreshing = true;
   refreshPromise = doRefresh().finally(() => {

@@ -72,17 +72,17 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: 'https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/w_32,h_32,c_fill/v1776681497/download_5_qdevvi.webp',
+        url: 'https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_png/w_32,h_32,c_fill/v1780315457/ChatGPT_Image_Jun_1_2026_01_04_02_PM_ecrinl.png',
         sizes: '32x32',
-        type: 'image/webp',
+        type: 'image/png',
       },
       {
-        url: 'https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/w_16,h_16,c_fill/v1776681497/download_5_qdevvi.webp',
+        url: 'https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_png/w_16,h_16,c_fill/v1780315457/ChatGPT_Image_Jun_1_2026_01_04_02_PM_ecrinl.png',
         sizes: '16x16',
-        type: 'image/webp',
+        type: 'image/png',
       },
     ],
-    apple: 'https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/w_180,h_180,c_fill/v1776681497/download_5_qdevvi.webp',
+    apple: 'https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_png/w_180,h_180,c_fill/v1780315457/ChatGPT_Image_Jun_1_2026_01_04_02_PM_ecrinl.png',
   },
 }
 
@@ -113,7 +113,7 @@ export default function RootLayout({
               '@type': 'Organization',
               name: 'KeccOil',
               url: 'https://keccoil.com',
-              logo: 'https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1776681497/download_5_qdevvi.webp',
+              logo: 'https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1780315457/ChatGPT_Image_Jun_1_2026_01_04_02_PM_ecrinl.png',
               description:
                 'Premium red palm oil wholesale and retail in Nigeria. Food-grade certified, fast delivery.',
               contactPoint: {

@@ -13,6 +13,7 @@ export interface HeroSlide {
   ctaText: string;
   ctaLink: string;
   ctaExternal?: boolean;
+  overlayClass?: string;
 }
 
 interface HeroSliderProps {
@@ -61,7 +62,7 @@ export function HeroSlider({
 
   return (
     <div
-      className="relative w-full bg-black overflow-hidden"
+      className="relative w-full bg-white overflow-hidden"
       onMouseEnter={() => setIsAutoPlay(false)}
       onMouseLeave={() => setIsAutoPlay(true)}
       role="region"
@@ -74,8 +75,10 @@ export function HeroSlider({
         {slides?.map((s, index) => (
           <div
             key={s.id}
-            className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
-              index === currentSlide ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+              index === currentSlide
+                ? 'opacity-100 scale-100'
+                : 'opacity-0 scale-105 pointer-events-none'
             }`}
             role="group"
             aria-roledescription="slide"
@@ -104,35 +107,47 @@ export function HeroSlider({
             )}
 
             {/* Overlay — bottom gradient on mobile (portrait friendly), side gradient on desktop */}
-            <div className="absolute inset-0 bg-gradient-to-t sm:bg-gradient-to-r from-black/70 via-black/40 to-transparent flex flex-col justify-end p-5 pb-14 sm:p-8 sm:pb-16 md:p-12 lg:p-16">
-              <div className="max-w-xl lg:max-w-2xl">
+            <div className={s.overlayClass || "absolute inset-0 bg-gradient-to-t sm:bg-gradient-to-r from-black/70 via-black/40 to-transparent flex flex-col justify-end p-5 pb-14 sm:p-8 sm:pb-16 md:p-12 lg:p-16"}>
+              <div className={`max-w-xl lg:max-w-2xl transition-all duration-1000 ease-out ${
+                index === currentSlide
+                  ? 'opacity-100 translate-y-0 delay-300'
+                  : 'opacity-0 translate-y-4'
+              }`}>
                 {s.title && (
-                  <h2 className="text-lg sm:text-2xl md:text-3xl lg:text-5xl font-bold text-white mb-1 sm:mb-2 md:mb-3 leading-tight line-clamp-2">
+                  <h2 className={`text-lg sm:text-2xl md:text-3xl lg:text-5xl font-bold text-white mb-1 sm:mb-2 md:mb-3 leading-tight line-clamp-2 transition-all duration-1000 ease-out ${
+                    index === currentSlide ? 'opacity-100 translate-y-0 delay-500' : 'opacity-0 translate-y-4'
+                  }`}>
                     {s.title}
                   </h2>
                 )}
                 {s.subtitle && (
-                  <p className="text-[13px] leading-snug sm:text-sm md:text-base text-white/90 mb-3 sm:mb-5 md:mb-6 max-w-sm sm:max-w-md lg:max-w-lg line-clamp-2">
+                  <p className={`text-[13px] leading-snug sm:text-sm md:text-base text-white/90 mb-3 sm:mb-5 md:mb-6 max-w-sm sm:max-w-md lg:max-w-lg line-clamp-2 transition-all duration-1000 ease-out ${
+                    index === currentSlide ? 'opacity-100 translate-y-0 delay-700' : 'opacity-0 translate-y-4'
+                  }`}>
                     {s.subtitle}
                   </p>
                 )}
-                {s.ctaExternal ? (
-                  <a
-                    href={s.ctaLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block px-5 py-2.5 sm:px-7 sm:py-3 md:px-8 md:py-3.5 bg-primary text-primary-foreground font-bold rounded-full hover:bg-primary/90 transition-all text-xs sm:text-sm md:text-base shadow-lg shadow-primary/30 hover:scale-105 active:scale-95"
-                  >
-                    {s.ctaText}
-                  </a>
-                ) : (
-                  <Link
-                    href={s.ctaLink}
-                    className="inline-block px-5 py-2.5 sm:px-7 sm:py-3 md:px-8 md:py-3.5 bg-primary text-primary-foreground font-bold rounded-full hover:bg-primary/90 transition-all text-xs sm:text-sm md:text-base shadow-lg shadow-primary/30 hover:scale-105 active:scale-95"
-                  >
-                    {s.ctaText}
-                  </Link>
-                )}
+                <div className={`transition-all duration-1000 ease-out ${
+                  index === currentSlide ? 'opacity-100 translate-y-0 delay-[900ms]' : 'opacity-0 translate-y-4'
+                }`}>
+                  {s.ctaExternal ? (
+                    <a
+                      href={s.ctaLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block px-5 py-2.5 sm:px-7 sm:py-3 md:px-10 md:py-4 lg:px-12 lg:py-5 bg-primary text-primary-foreground font-black rounded-full hover:bg-primary/90 transition-all text-xs sm:text-sm md:text-lg lg:text-xl uppercase tracking-wide shadow-xl shadow-primary/40 hover:scale-110 hover:shadow-2xl hover:shadow-primary/50 active:scale-95 animate-pulse md:animate-bounce"
+                    >
+                      {s.ctaText}
+                    </a>
+                  ) : (
+                    <Link
+                      href={s.ctaLink}
+                      className="inline-block px-5 py-2.5 sm:px-7 sm:py-3 md:px-10 md:py-4 lg:px-12 lg:py-5 bg-primary text-primary-foreground font-black rounded-full hover:bg-primary/90 transition-all text-xs sm:text-sm md:text-lg lg:text-xl uppercase tracking-wide shadow-xl shadow-primary/40 hover:scale-110 hover:shadow-2xl hover:shadow-primary/50 active:scale-95 animate-pulse md:animate-bounce"
+                    >
+                      {s.ctaText}
+                    </Link>
+                  )}
+                </div>
               </div>
             </div>
           </div>

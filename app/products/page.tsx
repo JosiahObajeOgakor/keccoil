@@ -53,17 +53,22 @@ export default function ProductsPage() {
       <main className="flex-1">
         {/* Page Header */}
         <section
-          className="relative border-b border-border bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/w_1920/c_limit/v1778179220/ChatGPT_Image_May_7_2026_07_39_56_PM_mhaglh.png')" }}
+          className="relative border-b border-border overflow-hidden min-h-[200px] sm:min-h-[250px] md:min-h-[350px] lg:min-h-[450px]"
         >
-          <div className="absolute inset-0 bg-black/60" />
-          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
-              Our Products
-            </h1>
-            <p className="text-lg text-white/80">
-              Browse our complete collection of premium red palm oil
-            </p>
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105"
+            style={{ backgroundImage: "url('https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/w_1920/c_fill/g_center/v1780312066/ChatGPT_Image_Jun_1_2026_12_06_27_PM_yqqygb.png')" }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/30" />
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20 md:py-28 lg:py-36 flex items-center min-h-[inherit]">
+            <div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-4 drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">
+                Our Products
+              </h1>
+              <p className="text-lg md:text-xl text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                Browse our complete collection of premium red palm oil
+              </p>
+            </div>
           </div>
         </section>
 

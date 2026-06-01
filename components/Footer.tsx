@@ -11,11 +11,10 @@ export function Footer() {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <Image
-                src="/kecelogo.jpeg"
+                src="https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/w_112/v1780315457/ChatGPT_Image_Jun_1_2026_01_04_02_PM_ecrinl.png"
                 alt="KeccOil"
                 width={56}
                 height={56}
-                unoptimized
                 className="w-14 h-14 rounded-xl object-cover border border-border shadow-sm"
               />
               <span className="font-bold text-foreground text-base">KeccOil</span>

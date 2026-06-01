@@ -92,13 +92,13 @@ export function OrderDetails({ orderId }: { orderId: number }) {
             {order.items?.map((item, i) => (
               <div key={i} className="flex justify-between text-sm">
                 <span className="text-foreground">{item.product_name || 'Product'} × {item.quantity}</span>
-                <span className="text-muted-foreground">₦{(item.unit_price * item.quantity).toLocaleString()}</span>
+                <span className="text-muted-foreground">₦{((item.unit_price * item.quantity) / 100).toLocaleString()}</span>
               </div>
             )) ?? <p className="text-sm text-muted-foreground">No items</p>}
           </div>
           <div className="mt-3 pt-3 border-t border-border flex justify-between font-semibold text-sm">
             <span>Total</span>
-            <span>₦{order.total_amount ? order.total_amount.toLocaleString() : '0'}</span>
+            <span>₦{order.total_amount ? (order.total_amount / 100).toLocaleString() : '0'}</span>
           </div>
         </div>
 

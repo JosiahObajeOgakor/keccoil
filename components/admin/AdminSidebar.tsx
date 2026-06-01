@@ -47,7 +47,7 @@ export function AdminSidebar() {
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-border">
         <Image
-          src="https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1776681497/download_5_qdevvi.webp"
+          src="https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/w_64/v1780315457/ChatGPT_Image_Jun_1_2026_01_04_02_PM_ecrinl.png"
           alt="KeccOil"
           width={32}
           height={32}
