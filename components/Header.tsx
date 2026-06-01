@@ -23,7 +23,7 @@ export function Header() {
           <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
             <div className="bg-white rounded-lg p-1 shadow-sm">
               <Image
-                src="https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/w_96/v1780315457/ChatGPT_Image_Jun_1_2026_01_04_02_PM_ecrinl.png"
+                src="https://res.cloudinary.com/detpqzhnq/image/upload/v1780339587/kecclogo_kjiqkv.png"
                 alt="KeccOil"
                 width={48}
                 height={48}
