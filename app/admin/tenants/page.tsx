@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { isAdminAuthenticated } from '@/lib/utils/auth';
 import {
   adminGetTenants, adminCreateTenant, adminDeleteTenant,
-  adminGetTenant, adminUpdateTenant, getTenantUsers,
+  adminGetTenant, adminUpdateTenant, adminGetTenantUsers,
   adminCreateTenantUser, adminDeleteTenantUser,
   adminGetTenantUsage, adminChangePlan,
   adminSuspendSubscription, adminReactivateSubscription,
@@ -121,7 +121,7 @@ export default function AdminTenantsPage() {
     try {
       const [t, u, us] = await Promise.all([
         adminGetTenant(id),
-        getTenantUsers(),
+        adminGetTenantUsers(id),
         adminGetTenantUsage(id),
       ]);
       setTenant(t);

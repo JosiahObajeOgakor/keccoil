@@ -32,11 +32,10 @@ export const useTenantCustomersStore = create<TenantCustomersState>((set, get) =
   error: null,
 
   fetchCustomers: async () => {
-    const { page, limit, search } = get();
+    const { page, limit } = get();
     set({ isLoading: true, error: null });
     try {
       const data: PaginatedTenantCustomers = await api.getTenantCustomers({
-        search: search || undefined,
         page,
         limit,
       });
@@ -59,11 +58,11 @@ export const useTenantCustomersStore = create<TenantCustomersState>((set, get) =
   selectCustomer: async (id) => {
     set({ isLoading: true });
     try {
-      const [customer, ordersData] = await Promise.all([
+      const [customer, orders] = await Promise.all([
         api.getTenantCustomer(id),
         api.getTenantCustomerOrders(id),
       ]);
-      set({ selectedCustomer: customer, customerOrders: ordersData.orders, isLoading: false });
+      set({ selectedCustomer: customer, customerOrders: orders ?? [], isLoading: false });
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'Failed to fetch customer', isLoading: false });
     }

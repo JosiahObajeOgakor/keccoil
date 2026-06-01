@@ -490,7 +490,7 @@ export async function sendTokenChatMessage(
   token: string,
   message: string
 ): Promise<ChatResponse> {
-  const res = await fetch(`${API_BASE_URL}/chat/message`, {
+  const res = await fetch(`${API_BASE_URL}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token, message }),
@@ -508,8 +508,8 @@ export async function checkChatSession(
 }
 
 export async function endChatSession(token: string): Promise<void> {
-  await publicFetch('/chat/end', {
-    method: 'POST',
+  await publicFetch('/chat/session', {
+    method: 'DELETE',
     body: JSON.stringify({ token }),
   });
 }
@@ -552,7 +552,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<RefreshR
 
 export async function logoutTenant(refreshToken: string): Promise<void> {
   const token = useAuthStore.getState().accessToken;
-  await fetch(`${API_BASE_URL}/tenant/auth/logout`, {
+  await fetch(`${API_BASE_URL}/auth/logout`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -563,7 +563,7 @@ export async function logoutTenant(refreshToken: string): Promise<void> {
 }
 
 export async function changePassword(oldPassword: string, newPassword: string): Promise<void> {
-  await tenantFetch('/tenant/auth/change-password', {
+  await tenantFetch('/auth/change-password', {
     method: 'POST',
     body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
   });
@@ -599,6 +599,8 @@ export async function deleteTenantProduct(id: number): Promise<void> {
 
 export async function getTenantOrders(params?: {
   status?: string;
+  from?: string;
+  to?: string;
   page?: number;
   limit?: number;
 }): Promise<PaginatedTenantOrders> {
@@ -626,7 +628,6 @@ export async function exportTenantOrdersCSV(): Promise<Response> {
 // ─── Tenant Customers ───────────────────────────────────────────
 
 export async function getTenantCustomers(params?: {
-  search?: string;
   page?: number;
   limit?: number;
 }): Promise<PaginatedTenantCustomers> {
@@ -637,14 +638,17 @@ export async function getTenantCustomer(id: number): Promise<TenantCustomer> {
   return tenantFetch<TenantCustomer>(`/tenant/customers/${id}`);
 }
 
-export async function getTenantCustomerOrders(id: number): Promise<{ orders: TenantOrder[] }> {
-  return tenantFetch<{ orders: TenantOrder[] }>(`/tenant/customers/${id}/orders`);
+export async function getTenantCustomerOrders(id: number): Promise<TenantOrder[]> {
+  return tenantFetch<TenantOrder[]>(`/tenant/customers/${id}/orders`);
 }
 
 // ─── Tenant Analytics ───────────────────────────────────────────
 
-export async function getTenantAnalyticsOverview(): Promise<TenantAnalyticsOverview> {
-  return tenantFetch<TenantAnalyticsOverview>('/tenant/analytics/overview');
+export async function getTenantAnalyticsOverview(params?: {
+  from?: string;
+  to?: string;
+}): Promise<TenantAnalyticsOverview> {
+  return tenantFetch<TenantAnalyticsOverview>(`/tenant/analytics/overview${qs(params ?? {})}`);
 }
 
 export async function getTenantCustomerAnalytics(customerId: number): Promise<CustomerAnalytics> {
@@ -653,8 +657,11 @@ export async function getTenantCustomerAnalytics(customerId: number): Promise<Cu
 
 // ─── Tenant Finance ─────────────────────────────────────────────
 
-export async function getTenantFinanceSummary(): Promise<FinanceSummary> {
-  return tenantFetch<FinanceSummary>('/tenant/finance/summary');
+export async function getTenantFinanceSummary(params?: {
+  from?: string;
+  to?: string;
+}): Promise<FinanceSummary> {
+  return tenantFetch<FinanceSummary>(`/tenant/finance/summary${qs(params ?? {})}`);
 }
 
 export async function getTenantFinancePayments(params?: {
@@ -695,16 +702,10 @@ export async function fundTenantWallet(data: FundWalletRequest): Promise<FundWal
 }
 
 export async function verifyWalletFunding(reference: string): Promise<VerifyWalletFundingResponse> {
-  const res = await fetch(`${API_BASE_URL}/wallet-paystack/webhook`, {
+  return tenantFetch<VerifyWalletFundingResponse>('/tenant/wallet/verify', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ event: 'charge.success', data: { reference } }),
+    body: JSON.stringify({ reference }),
   });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: res.statusText }));
-    throw new ApiError(body.error || 'Verification failed', res.status);
-  }
-  return res.json();
 }
 
 export async function getTenantWalletTransactions(params?: {
@@ -768,10 +769,6 @@ export async function adminDeleteTenant(id: number): Promise<void> {
 
 export async function adminGetTenantUsers(tenantId: number): Promise<TenantUser[]> {
   return adminFetch<TenantUser[]>(`/admin/tenants/${tenantId}/users`);
-}
-
-export async function getTenantUsers(): Promise<TenantUser[]> {
-  return tenantFetch<TenantUser[]>('/tenant/users');
 }
 
 export async function adminCreateTenantUser(tenantId: number, data: CreateTenantUserRequest): Promise<TenantUser> {

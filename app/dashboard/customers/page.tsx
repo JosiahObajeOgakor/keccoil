@@ -63,9 +63,9 @@ export default function TenantCustomersPage() {
         <div>
           <div className="flex items-center gap-2 mb-4">
             <ShoppingBag className="w-5 h-5 text-muted-foreground" />
-            <h3 className="text-lg font-semibold text-foreground">Orders ({customerOrders.length})</h3>
+            <h3 className="text-lg font-semibold text-foreground">Orders ({customerOrders?.length ?? 0})</h3>
           </div>
-          {customerOrders.length === 0 ? (
+          {!customerOrders || customerOrders.length === 0 ? (
             <p className="text-sm text-muted-foreground">No orders found</p>
           ) : (
             <div className="space-y-3 max-w-2xl">
