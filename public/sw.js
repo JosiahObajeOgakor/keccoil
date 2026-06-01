@@ -1,13 +1,13 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = 'keceoil-v4';
+const CACHE_NAME = 'keccoil-v5';
 const STATIC_ASSETS = [
   '/products',
   '/login',
   '/register',
 ];
 
-const API_CACHE_NAME = 'keceoil-api-v4';
+const API_CACHE_NAME = 'keccoil-api-v5';
 const API_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 self.addEventListener('install', (event) => {
@@ -38,7 +38,7 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   // API requests: network-first with cache fallback (stale-while-revalidate)
-  if (url.hostname === 'api.keceoil.com') {
+  if (url.hostname === 'api.keccoil.com') {
     event.respondWith(
       fetch(request)
         .then((response) => {

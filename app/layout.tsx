@@ -6,7 +6,7 @@ import { Toaster } from 'sonner'
 import './globals.css'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://keceoil.com'),
+  metadataBase: new URL('https://keccoil.com'),
   title: {
     default: 'KeccOil — Premium Red Palm Oil | Wholesale & Retail in Nigeria',
     template: '%s | KeccOil',
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_NG',
-    url: 'https://keceoil.com',
+    url: 'https://keccoil.com',
     siteName: 'KeccOil',
     title: 'KeccOil — Premium Red Palm Oil | Wholesale & Retail in Nigeria',
     description:
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
     ],
   },
   alternates: {
-    canonical: 'https://keceoil.com',
+    canonical: 'https://keccoil.com',
   },
   icons: {
     icon: [
@@ -112,7 +112,7 @@ export default function RootLayout({
               '@context': 'https://schema.org',
               '@type': 'Organization',
               name: 'KeccOil',
-              url: 'https://keceoil.com',
+              url: 'https://keccoil.com',
               logo: 'https://res.cloudinary.com/detpqzhnq/image/upload/q_auto/f_auto/v1776681497/download_5_qdevvi.webp',
               description:
                 'Premium red palm oil wholesale and retail in Nigeria. Food-grade certified, fast delivery.',

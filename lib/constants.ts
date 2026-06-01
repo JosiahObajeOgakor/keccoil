@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'https://api.keceoil.com';
+export const API_BASE_URL = 'https://api.keccoil.com';
 
 export const ADMIN_PHONE = process.env.NEXT_PUBLIC_ADMIN_PHONE || '234 703 998 6047';
 

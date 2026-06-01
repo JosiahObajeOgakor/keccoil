@@ -11,6 +11,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/admin/', '/dashboard/', '/api/'],
       },
     ],
-    sitemap: 'https://keceoil.com/sitemap.xml',
+    sitemap: 'https://keccoil.com/sitemap.xml',
   };
 }

@@ -4,7 +4,7 @@ import { getProducts } from '@/lib/api';
 export const dynamic = 'force-static';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://keceoil.com';
+  const baseUrl = 'https://keccoil.com';
 
   let productUrls: MetadataRoute.Sitemap = [];
   try {

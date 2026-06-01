@@ -30,7 +30,7 @@ export default function TermsPage() {
             <div>
               <h2 className="text-2xl font-bold text-foreground mb-4">1. Acceptance of Terms</h2>
               <p className="text-muted-foreground leading-relaxed">
-                By accessing or using the KeccOil website (keceoil.com), placing an order, or interacting with our AI chat assistant, you agree to be bound by these Terms and Conditions. If you do not agree to all of these terms, you must not use our services. These terms constitute a legally binding agreement between you and KeccOil Nigeria.
+                By accessing or using the KeccOil website (keccoil.com), placing an order, or interacting with our AI chat assistant, you agree to be bound by these Terms and Conditions. If you do not agree to all of these terms, you must not use our services. These terms constitute a legally binding agreement between you and KeccOil Nigeria.
               </p>
             </div>
 
@@ -227,8 +227,8 @@ export default function TermsPage() {
                 For any questions regarding these Terms and Conditions, please reach out to us:
               </p>
               <ul className="space-y-2 text-muted-foreground">
-                <li><strong className="text-foreground">Email:</strong> <a href="mailto:info@keceoil.com" className="text-primary hover:underline">info@keceoil.com</a></li>
-                <li><strong className="text-foreground">Website:</strong> <a href="https://keceoil.com" className="text-primary hover:underline">keceoil.com</a></li>
+                <li><strong className="text-foreground">Email:</strong> <a href="mailto:info@keccoil.com" className="text-primary hover:underline">info@keccoil.com</a></li>
+                <li><strong className="text-foreground">Website:</strong> <a href="https://keccoil.com" className="text-primary hover:underline">keccoil.com</a></li>
                 <li><strong className="text-foreground">Business Name:</strong> KeccOil Nigeria</li>
               </ul>
             </div>

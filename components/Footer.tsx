@@ -57,7 +57,7 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href="mailto:info@keceoil.com" className="hover:text-primary transition-colors">
+                <a href="mailto:info@keccoil.com" className="hover:text-primary transition-colors">
                   Email Us
                 </a>
               </li>

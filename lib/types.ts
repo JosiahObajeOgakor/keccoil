@@ -1,4 +1,4 @@
-// API types matching https://api.keceoil.com/swagger/doc.json
+// API types matching https://api.keccoil.com/swagger/doc.json
 
 export type OrderStatus =
   | 'PENDING'

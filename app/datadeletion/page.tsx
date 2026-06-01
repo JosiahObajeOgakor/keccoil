@@ -60,7 +60,7 @@ export default function DataDeletionPage() {
               <div className="bg-secondary/30 border border-border rounded-xl p-6 mb-4">
                 <h3 className="text-lg font-semibold text-foreground mb-3">Option 1: Email Request</h3>
                 <p className="text-muted-foreground leading-relaxed mb-3">
-                  Send an email to <a href="mailto:info@keceoil.com" className="text-primary hover:underline">info@keceoil.com</a> with the subject line <strong className="text-foreground">&quot;Data Deletion Request&quot;</strong> and include:
+                  Send an email to <a href="mailto:info@keccoil.com" className="text-primary hover:underline">info@keccoil.com</a> with the subject line <strong className="text-foreground">&quot;Data Deletion Request&quot;</strong> and include:
                 </p>
                 <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
                   <li>Your full name</li>
@@ -136,8 +136,8 @@ export default function DataDeletionPage() {
                 If you have any questions about data deletion or need assistance with your request:
               </p>
               <ul className="space-y-2 text-muted-foreground">
-                <li><strong className="text-foreground">Email:</strong> <a href="mailto:info@keceoil.com" className="text-primary hover:underline">info@keceoil.com</a></li>
-                <li><strong className="text-foreground">Website:</strong> <a href="https://keceoil.com" className="text-primary hover:underline">keceoil.com</a></li>
+                <li><strong className="text-foreground">Email:</strong> <a href="mailto:info@keccoil.com" className="text-primary hover:underline">info@keccoil.com</a></li>
+                <li><strong className="text-foreground">Website:</strong> <a href="https://keccoil.com" className="text-primary hover:underline">keccoil.com</a></li>
                 <li><strong className="text-foreground">Response Time:</strong> Within 2 business days</li>
               </ul>
             </div>

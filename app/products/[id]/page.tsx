@@ -29,10 +29,10 @@ export async function generateMetadata({
         images: product.image_url
           ? [{ url: product.image_url, width: 800, height: 800, alt: product.name }]
           : undefined,
-        url: `https://keceoil.com/products/${id}`,
+        url: `https://keccoil.com/products/${id}`,
       },
       alternates: {
-        canonical: `https://keceoil.com/products/${id}`,
+        canonical: `https://keccoil.com/products/${id}`,
       },
     };
   } catch {
