@@ -490,7 +490,7 @@ export async function sendTokenChatMessage(
   token: string,
   message: string
 ): Promise<ChatResponse> {
-  const res = await fetch(`${API_BASE_URL}/chat`, {
+  const res = await fetch(`${API_BASE_URL}/chat/message`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token, message }),
@@ -508,8 +508,8 @@ export async function checkChatSession(
 }
 
 export async function endChatSession(token: string): Promise<void> {
-  await publicFetch('/chat/session', {
-    method: 'DELETE',
+  await publicFetch('/chat/end', {
+    method: 'POST',
     body: JSON.stringify({ token }),
   });
 }
